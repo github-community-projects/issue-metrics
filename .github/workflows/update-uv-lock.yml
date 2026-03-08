@@ -1,0 +1,35 @@
+---
+name: Update uv.lock
+
+on:
+  pull_request:
+    paths:
+      - pyproject.toml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-lock:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.head_ref }}
+          persist-credentials: true
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@0c5e2b8115b80b4c7c5ddf6ffdd634974642d182 # v5.4.1
+
+      - name: Update uv.lock
+        run: uv lock
+
+      - name: Commit updated lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add uv.lock
+          git diff --cached --quiet || git commit -s -m "chore(deps): update uv.lock"
+          git push

@@ -193,14 +193,10 @@ We would ❤️ contributions to improve this action. Please see [CONTRIBUTING.m
 
 ### Development Setup
 
-- Ensure you have python `3.10+` installed
+- Install [uv](https://docs.astral.sh/uv/getting-started/installation/)
 - Clone this repository and cd into `issue-metrics`
-- Create python virtual env
-  `python3 -m venv .venv`
-- Activate virtual env
-  `source .venv/bin/activate`
 - Install dependencies
-  `pip install -r requirements.txt -r requirements-test.txt`
+  `uv sync`
 - Run tests
   `make test`
 - Run linter
