@@ -1,26 +1,5 @@
 {
-  "exitCode": 0,
-  "ignore": [
-    "**/.venv/**",
-    "**/.coverage*",
-    "**/.devcontainer/**",
-    "**/.git/**",
-    "**/.gitignore",
-    "**/.github/**",
-    "**/.mypy_cache/**",
-    "**/.pytest_cache/**",
-    "**/__pycache__/**",
-    "**/build/**",
-    "**/dist/**",
-    "**/docs/**",
-    "**/migrations/**",
-    "**/node_modules/**",
-    "**/report/**",
-    "**/test_*.py",
-    "**/venv/**",
-    "**/*.md",
-    "**/Dockerfile",
-    "**/LICENSE",
-    "**/Makefile"
-  ]
+  "threshold": 25,
+  "ignore": ["test*", "**/.venv/**"],
+  "absolute": true
 }
