@@ -1,0 +1,7 @@
+issuer: https://token.actions.githubusercontent.com
+subject_pattern: "repo:github-community-projects/issue-metrics:pull_request"
+claim_pattern:
+  job_workflow_ref: "github-community-projects/issue-metrics/.github/workflows/update-uv-lock.yml@.*"
+
+permissions:
+  contents: write
