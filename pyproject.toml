@@ -7,7 +7,7 @@ dependencies = [
     "github3-py==4.0.1",
     "numpy==2.4.2",
     "python-dotenv==1.2.2",
-    "pytz==2025.2",
+    "pytz==2026.1.post1",
     "requests==2.32.5",
 ]
 
