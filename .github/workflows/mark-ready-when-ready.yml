@@ -1,0 +1,28 @@
+name: Mark PR Ready When Ready
+
+on:
+  pull_request:
+    types: [opened, edited, labeled, unlabeled, synchronize]
+
+permissions:
+  checks: read
+  contents: write
+  pull-requests: write
+  statuses: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  mark-ready:
+    name: Mark as ready after successful checks
+    runs-on: ubuntu-latest
+    if: |
+      contains(github.event.pull_request.labels.*.name, 'Mark Ready When Ready') &&
+      github.event.pull_request.draft == true
+    steps:
+      - name: Mark ready when ready
+        uses: kenyonj/mark-ready-when-ready@33b13c51ba23786efb933701ef253352baf05bdd # main (contents:write fix)
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
