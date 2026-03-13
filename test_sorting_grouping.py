@@ -297,6 +297,7 @@ class TestWriteToMarkdownWithSorting(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=None,
+            average_time_to_first_review=None,
             average_time_to_close=None,
             average_time_to_answer=None,
             average_time_in_draft=None,
@@ -357,6 +358,7 @@ class TestWriteToMarkdownWithGrouping(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=None,
+            average_time_to_first_review=None,
             average_time_to_close=None,
             average_time_to_answer=None,
             average_time_in_draft=None,

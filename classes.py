@@ -53,6 +53,7 @@ class IssueWithMetrics:
         self.assignee = assignee
         self.assignees = assignees or []
         self.time_to_first_response = time_to_first_response
+        self.time_to_first_review = None
         self.time_to_close = time_to_close
         self.time_to_answer = time_to_answer
         self.time_in_draft = time_in_draft

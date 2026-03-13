@@ -55,6 +55,7 @@ class TestColumnOrderFix(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=None,
+            average_time_to_first_review=None,
             average_time_to_close=None,
             average_time_to_answer=None,
             average_time_in_draft=None,
@@ -80,7 +81,7 @@ class TestColumnOrderFix(unittest.TestCase):
         # The table should have the columns in the correct order
         # and the data should be properly aligned
         expected_header = (
-            "| Title | URL | Assignee | Author | Time to first response | "
+            "| Title | URL | Assignee | Author | Time to first response | Time to first review | "
             "Time to close | Time to answer | Created At | Status |"
         )
         self.assertIn(expected_header, content)
@@ -92,7 +93,7 @@ class TestColumnOrderFix(unittest.TestCase):
             "| Test Issue | https://github.com/user/repo/issues/1 | "
             "[assignee1](https://github.com/assignee1) | "
             "[testuser](https://github.com/testuser) | 1 day, 0:00:00 | "
-            "2 days, 0:00:00 | 3 days, 0:00:00 | 2023-01-01T00:00:00Z | open |"
+            "None | 2 days, 0:00:00 | 3 days, 0:00:00 | 2023-01-01T00:00:00Z | open |"
         )
         self.assertIn(expected_row, content)
 

@@ -39,6 +39,7 @@ class EnvVars:
         hide_time_to_close (bool): If true, the time to close metric is hidden in the output
         hide_time_to_first_response (bool): If true, the time to first response metric is hidden
             in the output
+        hide_time_to_first_review (bool): If true, the time to first review metric is hidden in the output
         hide_created_at (bool): If true, the created at timestamp is hidden in the output
         hide_status (bool): If true, the status column is hidden in the output
         ignore_users (List[str]): List of usernames to ignore when calculating metrics
@@ -79,6 +80,7 @@ class EnvVars:
         hide_time_to_answer: bool,
         hide_time_to_close: bool,
         hide_time_to_first_response: bool,
+        hide_time_to_first_review: bool,
         hide_created_at: bool,
         hide_status: bool,
         ignore_user: List[str],
@@ -114,6 +116,7 @@ class EnvVars:
         self.hide_time_to_answer = hide_time_to_answer
         self.hide_time_to_close = hide_time_to_close
         self.hide_time_to_first_response = hide_time_to_first_response
+        self.hide_time_to_first_review = hide_time_to_first_review
         self.hide_created_at = hide_created_at
         self.hide_status = hide_status
         self.enable_mentor_count = enable_mentor_count
@@ -148,6 +151,7 @@ class EnvVars:
             f"{self.hide_time_to_answer}, "
             f"{self.hide_time_to_close}, "
             f"{self.hide_time_to_first_response}, "
+            f"{self.hide_time_to_first_review}, "
             f"{self.hide_created_at}, "
             f"{self.hide_status}, "
             f"{self.ignore_users}, "
@@ -269,6 +273,7 @@ def get_env_vars(test: bool = False) -> EnvVars:
     hide_time_to_answer = get_bool_env_var("HIDE_TIME_TO_ANSWER", False)
     hide_time_to_close = get_bool_env_var("HIDE_TIME_TO_CLOSE", False)
     hide_time_to_first_response = get_bool_env_var("HIDE_TIME_TO_FIRST_RESPONSE", False)
+    hide_time_to_first_review = get_bool_env_var("HIDE_TIME_TO_FIRST_REVIEW", False)
     hide_created_at = get_bool_env_var("HIDE_CREATED_AT", True)
     hide_status = get_bool_env_var("HIDE_STATUS", True)
     hide_pr_statistics = get_bool_env_var("HIDE_PR_STATISTICS", True)
@@ -293,6 +298,7 @@ def get_env_vars(test: bool = False) -> EnvVars:
         hide_time_to_answer,
         hide_time_to_close,
         hide_time_to_first_response,
+        hide_time_to_first_review,
         hide_created_at,
         hide_status,
         ignore_users_list,

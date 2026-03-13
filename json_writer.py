@@ -4,6 +4,7 @@ Functions:
     write_to_json(
         issues_with_metrics: Union[List[IssueWithMetrics], None],
         stats_time_to_first_response: Union[dict[str, timedelta], None],
+        stats_time_to_first_review: Union[dict[str, timedelta], None],
         stats_time_to_close: Union[dict[str, timedelta], None],
         stats_time_to_answer: Union[dict[str, timedelta], None],
         stats_time_in_draft: Union[dict[str, timedelta], None],
@@ -29,6 +30,7 @@ from classes import IssueWithMetrics
 def write_to_json(
     issues_with_metrics: Union[List[IssueWithMetrics], None],
     stats_time_to_first_response: Union[dict[str, timedelta], None],
+    stats_time_to_first_review: Union[dict[str, timedelta], None],
     stats_time_to_close: Union[dict[str, timedelta], None],
     stats_time_to_answer: Union[dict[str, timedelta], None],
     stats_time_in_draft: Union[dict[str, timedelta], None],
@@ -104,6 +106,15 @@ def write_to_json(
         med_time_to_first_response = stats_time_to_first_response["med"]
         p90_time_to_first_response = stats_time_to_first_response["90p"]
 
+    # time to first review
+    average_time_to_first_review = None
+    med_time_to_first_review = None
+    p90_time_to_first_review = None
+    if stats_time_to_first_review is not None:
+        average_time_to_first_review = stats_time_to_first_review["avg"]
+        med_time_to_first_review = stats_time_to_first_review["med"]
+        p90_time_to_first_review = stats_time_to_first_review["90p"]
+
     # time to close
     average_time_to_close = None
     med_time_to_close = None
@@ -155,16 +166,19 @@ def write_to_json(
     # Create a dictionary with the metrics
     metrics: dict[str, Any] = {
         "average_time_to_first_response": str(average_time_to_first_response),
+        "average_time_to_first_review": str(average_time_to_first_review),
         "average_time_to_close": str(average_time_to_close),
         "average_time_to_answer": str(average_time_to_answer),
         "average_time_in_draft": str(average_time_in_draft),
         "average_time_in_labels": average_time_in_labels,
         "median_time_to_first_response": str(med_time_to_first_response),
+        "median_time_to_first_review": str(med_time_to_first_review),
         "median_time_to_close": str(med_time_to_close),
         "median_time_to_answer": str(med_time_to_answer),
         "median_time_in_draft": str(med_time_in_draft),
         "median_time_in_labels": med_time_in_labels,
         "90_percentile_time_to_first_response": str(p90_time_to_first_response),
+        "90_percentile_time_to_first_review": str(p90_time_to_first_review),
         "90_percentile_time_to_close": str(p90_time_to_close),
         "90_percentile_time_to_answer": str(p90_time_to_answer),
         "90_percentile_time_in_draft": str(p90_time_in_draft),
@@ -193,6 +207,7 @@ def write_to_json(
                 "assignee": issue.assignee,
                 "assignees": issue.assignees,
                 "time_to_first_response": str(issue.time_to_first_response),
+                "time_to_first_review": str(issue.time_to_first_review),
                 "time_to_close": str(issue.time_to_close),
                 "time_to_answer": str(issue.time_to_answer),
                 "time_in_draft": str(issue.time_in_draft),

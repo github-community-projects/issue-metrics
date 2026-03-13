@@ -78,6 +78,10 @@ def get_non_hidden_columns(labels) -> List[str]:
     if not hide_time_to_first_response:
         columns.append("Time to first response")
 
+    hide_time_to_first_review = env_vars.hide_time_to_first_review
+    if not hide_time_to_first_review:
+        columns.append("Time to first review")
+
     hide_time_to_close = env_vars.hide_time_to_close
     if not hide_time_to_close:
         columns.append("Time to close")
@@ -129,6 +133,7 @@ def sort_issues(
     valid_fields = {
         "time_to_close",
         "time_to_first_response",
+        "time_to_first_review",
         "time_to_answer",
         "time_in_draft",
         "created_at",
@@ -200,6 +205,7 @@ def group_issues(
 def write_to_markdown(
     issues_with_metrics: Union[List[IssueWithMetrics], None],
     average_time_to_first_response: Union[dict[str, timedelta], None],
+    average_time_to_first_review: Union[dict[str, timedelta], None],
     average_time_to_close: Union[dict[str, timedelta], None],
     average_time_to_answer: Union[dict[str, timedelta], None],
     average_time_in_draft: Union[dict[str, timedelta], None],
@@ -268,6 +274,7 @@ def write_to_markdown(
         write_overall_metrics_tables(
             issues_with_metrics,
             average_time_to_first_response,
+            average_time_to_first_review,
             average_time_to_close,
             average_time_to_answer,
             average_time_in_draft,
@@ -345,6 +352,8 @@ def write_to_markdown(
                         )
                     if "Time to first response" in columns:
                         file.write(f" {issue.time_to_first_response} |")
+                    if "Time to first review" in columns:
+                        file.write(f" {issue.time_to_first_review} |")
                     if "Time to close" in columns:
                         file.write(f" {issue.time_to_close} |")
                     if "Time to answer" in columns:
@@ -374,6 +383,7 @@ def write_to_markdown(
 def write_overall_metrics_tables(
     issues_with_metrics,
     stats_time_to_first_response,
+    stats_time_to_first_review,
     stats_time_to_close,
     stats_time_to_answer,
     average_time_in_draft,
@@ -397,6 +407,7 @@ def write_overall_metrics_tables(
             column in columns
             for column in [
                 "Time to first response",
+                "Time to first review",
                 "Time to close",
                 "Time to answer",
                 "Time in draft",
@@ -417,6 +428,16 @@ def write_overall_metrics_tables(
                 )
             else:
                 file.write("| Time to first response | None | None | None |\n")
+        if "Time to first review" in columns:
+            if stats_time_to_first_review is not None:
+                file.write(
+                    f"| Time to first review "
+                    f"| {stats_time_to_first_review['avg']} "
+                    f"| {stats_time_to_first_review['med']} "
+                    f"| {stats_time_to_first_review['90p']} |\n"
+                )
+            else:
+                file.write("| Time to first review | None | None | None |\n")
         if "Time to close" in columns:
             if stats_time_to_close is not None:
                 file.write(

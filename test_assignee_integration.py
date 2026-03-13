@@ -54,6 +54,7 @@ class TestAssigneeIntegration(unittest.TestCase):
         try:
             write_to_markdown(
                 issues_with_metrics=issues_with_metrics,
+                average_time_to_first_review=None,
                 average_time_to_first_response={
                     "avg": timedelta(hours=3),
                     "med": timedelta(hours=3),
@@ -132,6 +133,7 @@ class TestAssigneeIntegration(unittest.TestCase):
         try:
             json_output = write_to_json(
                 issues_with_metrics=issues_with_metrics,
+                stats_time_to_first_review=None,
                 stats_time_to_first_response={
                     "avg": timedelta(hours=3),
                     "med": timedelta(hours=3),

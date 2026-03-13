@@ -103,6 +103,7 @@ class TestWriteToMarkdown(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=time_to_first_response,
+            average_time_to_first_review=None,
             average_time_to_close=time_to_close,
             average_time_to_answer=time_to_answer,
             average_time_in_draft=time_in_draft,
@@ -126,6 +127,7 @@ class TestWriteToMarkdown(unittest.TestCase):
             "| Metric | Average | Median | 90th percentile |\n"
             "| --- | --- | --- | ---: |\n"
             "| Time to first response | 2 days, 0:00:00 | 2 days, 0:00:00 | 2 days, 0:00:00 |\n"
+            "| Time to first review | None | None | None |\n"
             "| Time to close | 3 days, 0:00:00 | 3 days, 0:00:00 | 3 days, 0:00:00 |\n"
             "| Time to answer | 4 days, 0:00:00 | 4 days, 0:00:00 | 4 days, 0:00:00 |\n"
             "| Time in draft | 1 day, 0:00:00 | 1 day, 0:00:00 | 1 day, 0:00:00 |\n"
@@ -137,13 +139,13 @@ class TestWriteToMarkdown(unittest.TestCase):
             "| Number of items that remain open | 2 |\n"
             "| Number of items closed | 1 |\n"
             "| Total number of items created | 2 |\n\n"
-            "| Title | URL | Assignee | Author | Time to first response | Time to close | "
+            "| Title | URL | Assignee | Author | Time to first response | Time to first review | Time to close | "
             "Time to answer | Time in draft | Time spent in bug | Created At | Status |\n"
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
             "| Issue 1 | https://github.com/user/repo/issues/1 | [charlie](https://github.com/charlie) | "
-            "[alice](https://github.com/alice) | 1 day, 0:00:00 | 2 days, 0:00:00 | 3 days, 0:00:00 | "
+            "[alice](https://github.com/alice) | 1 day, 0:00:00 | None | 2 days, 0:00:00 | 3 days, 0:00:00 | "
             "1 day, 0:00:00 | 4 days, 0:00:00 | -5 days, 0:00:00 | None |\n"
-            "| Issue 2 | https://github.com/user/repo/issues/2 | None | [bob](https://github.com/bob) | 3 days, 0:00:00 | "
+            "| Issue 2 | https://github.com/user/repo/issues/2 | None | [bob](https://github.com/bob) | 3 days, 0:00:00 | None | "
             "4 days, 0:00:00 | 5 days, 0:00:00 | 1 day, 0:00:00 | 2 days, 0:00:00 | -5 days, 0:00:00 | None |\n\n"
             "_This report was generated with the [Issue Metrics Action](https://github.com/github-community-projects/issue-metrics)_\n"
             "Search query used to find these items: `is:issue is:open label:bug`\n"
@@ -223,6 +225,7 @@ class TestWriteToMarkdown(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=average_time_to_first_response,
+            average_time_to_first_review=None,
             average_time_to_close=average_time_to_close,
             average_time_to_answer=average_time_to_answer,
             average_time_in_draft=average_time_in_draft,
@@ -244,6 +247,7 @@ class TestWriteToMarkdown(unittest.TestCase):
             "| Metric | Average | Median | 90th percentile |\n"
             "| --- | --- | --- | ---: |\n"
             "| Time to first response | 2 days, 0:00:00 | 2 days, 0:00:00 | 2 days, 0:00:00 |\n"
+            "| Time to first review | None | None | None |\n"
             "| Time to close | 3 days, 0:00:00 | 3 days, 0:00:00 | 3 days, 0:00:00 |\n"
             "| Time to answer | 4 days, 0:00:00 | 4 days, 0:00:00 | 4 days, 0:00:00 |\n"
             "| Time in draft | 1 day, 0:00:00 | 1 day, 0:00:00 | 1 day, 0:00:00 |\n"
@@ -255,14 +259,14 @@ class TestWriteToMarkdown(unittest.TestCase):
             "| Number of items that remain open | 2 |\n"
             "| Number of items closed | 1 |\n"
             "| Total number of items created | 2 |\n\n"
-            "| Title | URL | Assignee | Author | Time to first response | Time to close | "
+            "| Title | URL | Assignee | Author | Time to first response | Time to first review | Time to close | "
             "Time to answer | Time in draft | Time spent in bug | Created At | Status |\n"
-            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
+            "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n"
             "| Issue 1 | https://github.com/user/repo/issues/1 | [charlie](https://github.com/charlie) | "
-            "[alice](https://github.com/alice) | 1 day, 0:00:00 | 2 days, 0:00:00 | 3 days, 0:00:00 | "
+            "[alice](https://github.com/alice) | 1 day, 0:00:00 | None | 2 days, 0:00:00 | 3 days, 0:00:00 | "
             "1 day, 0:00:00 | 1 day, 0:00:00 | -5 days, 0:00:00 | None |\n"
             "| feat&#124; Issue 2 | https://github.com/user/repo/issues/2 | None | "
-            "[bob](https://github.com/bob) | 3 days, 0:00:00 | "
+            "[bob](https://github.com/bob) | 3 days, 0:00:00 | None | "
             "4 days, 0:00:00 | 5 days, 0:00:00 | None | 2 days, 0:00:00 | -5 days, 0:00:00 | None |\n\n"
             "_This report was generated with the [Issue Metrics Action](https://github.com/github-community-projects/issue-metrics)_\n"
         )
@@ -274,6 +278,7 @@ class TestWriteToMarkdown(unittest.TestCase):
         # Call the function with no issues
         with patch("builtins.open", mock_open()) as mock_open_file:
             write_to_markdown(
+                None,
                 None,
                 None,
                 None,
@@ -310,6 +315,7 @@ class TestWriteToMarkdown(unittest.TestCase):
         "GH_TOKEN": "test_token",
         "HIDE_CREATED_AT": "False",
         "HIDE_TIME_TO_FIRST_RESPONSE": "True",
+        "HIDE_TIME_TO_FIRST_REVIEW": "True",
         "HIDE_TIME_TO_CLOSE": "True",
         "HIDE_TIME_TO_ANSWER": "True",
         "HIDE_LABEL_METRICS": "True",
@@ -379,6 +385,7 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=average_time_to_first_response,
+            average_time_to_first_review=None,
             average_time_to_close=average_time_to_close,
             average_time_to_answer=average_time_to_answer,
             average_time_in_draft=average_time_in_draft,
@@ -428,6 +435,7 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
             "GH_TOKEN": "test_token",
             "HIDE_CREATED_AT": "False",
             "HIDE_TIME_TO_FIRST_RESPONSE": "True",
+            "HIDE_TIME_TO_FIRST_REVIEW": "True",
             "HIDE_TIME_TO_CLOSE": "True",
             "HIDE_TIME_TO_ANSWER": "True",
             "HIDE_LABEL_METRICS": "True",
@@ -490,6 +498,7 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=average_time_to_first_response,
+            average_time_to_first_review=None,
             average_time_to_close=average_time_to_close,
             average_time_to_answer=average_time_to_answer,
             average_time_in_draft=average_time_in_draft,
@@ -538,6 +547,7 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
             "GH_TOKEN": "test_token",
             "HIDE_CREATED_AT": "False",
             "HIDE_TIME_TO_FIRST_RESPONSE": "True",
+            "HIDE_TIME_TO_FIRST_REVIEW": "True",
             "HIDE_TIME_TO_CLOSE": "True",
             "HIDE_TIME_TO_ANSWER": "True",
             "HIDE_LABEL_METRICS": "True",
@@ -601,6 +611,7 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
         write_to_markdown(
             issues_with_metrics=issues_with_metrics,
             average_time_to_first_response=average_time_to_first_response,
+            average_time_to_first_review=None,
             average_time_to_close=average_time_to_close,
             average_time_to_answer=average_time_to_answer,
             average_time_in_draft=average_time_in_draft,
