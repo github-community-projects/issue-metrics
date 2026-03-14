@@ -16,10 +16,8 @@ This is a GitHub Action that searches for issues/pull requests/discussions in a 
 ## Repository Structure
 
 - `Makefile`: Contains commands for linting, testing, and other tasks
-- `requirements.txt`: Python dependencies for the project
-- `requirements-test.txt`: Python dependencies for testing
+- `pyproject.toml`: Python dependencies and project configuration
 - `README.md`: Project documentation and setup instructions
-- `setup.py`: Python package setup configuration
 - `test_*.py`: Python test files matching the naming convention for test discovery
 
 ## Key Guidelines

@@ -13,17 +13,24 @@ on:
   push:
     branches: [main]
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   analysis:
     name: Merge to Main Scorecard analysis
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       security-events: write
       id-token: write
 
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
       - name: "Checkout code"
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:

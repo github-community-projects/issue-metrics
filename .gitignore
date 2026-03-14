@@ -10,6 +10,9 @@ __pycache__/
 # asdf
 .tool-versions
 
+# ai
+**/.claude/*.local.*
+
 # C extensions
 *.so
 

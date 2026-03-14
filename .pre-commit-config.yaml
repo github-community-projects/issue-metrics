@@ -1,0 +1,37 @@
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: 51ca0f89b915509f07f956144ce2c64994b80947 # v8.16.3
+    hooks:
+      - id: gitleaks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: flake8
+        name: flake8
+        entry: uv run python -m flake8 --config=.github/linters/.flake8
+        language: system
+        types: [python]
+      - id: isort
+        name: isort
+        entry: uv run isort --settings-file=.github/linters/.isort.cfg
+        language: system
+        types: [python]
+      - id: pylint
+        name: pylint
+        entry: uv run python -m pylint --rcfile=.github/linters/.python-lint
+        language: system
+        types: [python]
+      - id: mypy
+        name: mypy
+        entry: uv run python -m mypy --config-file=.github/linters/.mypy.ini
+        language: system
+        types: [python]
+      - id: black
+        name: black
+        entry: uv run black
+        language: system
+        types: [python]

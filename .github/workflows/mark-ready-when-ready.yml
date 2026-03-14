@@ -5,10 +5,7 @@ on:
     types: [opened, edited, labeled, unlabeled, synchronize]
 
 permissions:
-  checks: read
-  contents: write
-  pull-requests: write
-  statuses: read
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
@@ -18,10 +15,20 @@ jobs:
   mark-ready:
     name: Mark as ready after successful checks
     runs-on: ubuntu-latest
+    permissions:
+      checks: read
+      contents: write
+      pull-requests: write
+      statuses: read
     if: |
       contains(github.event.pull_request.labels.*.name, 'Mark Ready When Ready') &&
       github.event.pull_request.draft == true
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        with:
+          egress-policy: audit
+
       - name: Mark ready when ready
         uses: kenyonj/mark-ready-when-ready@33b13c51ba23786efb933701ef253352baf05bdd # main (contents:write fix)
         with:
