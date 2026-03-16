@@ -6,12 +6,14 @@ on:
     types: [closed]
     branches: [main]
 permissions:
-  contents: read
+  attestations: write
+  contents: write
+  discussions: write
+  id-token: write
+  packages: write
+  pull-requests: read
 jobs:
   release:
-    permissions:
-      contents: write
-      pull-requests: read
     uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release.yaml@3b691dff6b68489c8548e1295d125c93c9c29a4e
     with:
       publish: true
@@ -20,11 +22,6 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
   release_image:
     needs: release
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
     uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release-image.yaml@3b691dff6b68489c8548e1295d125c93c9c29a4e
     with:
       image-name: ${{ github.repository_owner }}/issue_metrics
@@ -37,9 +34,6 @@ jobs:
       image-registry-password: ${{ secrets.GITHUB_TOKEN }}
   release_discussion:
     needs: release
-    permissions:
-      contents: read
-      discussions: write
     uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release-discussion.yaml@3b691dff6b68489c8548e1295d125c93c9c29a4e
     with:
       full-tag: ${{ needs.release.outputs.full-tag }}

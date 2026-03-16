@@ -6,13 +6,12 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   contributor_report:
     name: contributor report
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
 
     steps:
       - name: Harden the runner (Audit all outbound calls)

@@ -15,15 +15,13 @@ on:
 
 permissions:
   contents: read
+  id-token: write
+  security-events: write
 
 jobs:
   analysis:
     name: Merge to Main Scorecard analysis
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      security-events: write
-      id-token: write
 
     steps:
       - name: Harden the runner (Audit all outbound calls)
