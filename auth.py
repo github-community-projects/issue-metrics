@@ -33,7 +33,7 @@ def auth_to_github(
         else:
             gh = github3.github.GitHub()
         gh.login_as_app_installation(
-            gh_app_private_key_bytes, gh_app_id, gh_app_installation_id
+            gh_app_private_key_bytes, str(gh_app_id), gh_app_installation_id
         )
         github_connection = gh
     elif ghe and token:
