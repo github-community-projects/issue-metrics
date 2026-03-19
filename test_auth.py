@@ -85,7 +85,7 @@ class TestAuthToGithub(unittest.TestCase):
         mock_ghe = ""
 
         result = get_github_app_installation_token(
-            mock_ghe, b"gh_private_token", "gh_app_id", "gh_installation_id"
+            mock_ghe, "gh_app_id", b"gh_private_token", "gh_installation_id"
         )
 
         self.assertEqual(result, dummy_token)
