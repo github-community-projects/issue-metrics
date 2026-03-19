@@ -33,7 +33,7 @@ def auth_to_github(
         else:
             gh = github3.github.GitHub()
         gh.login_as_app_installation(
-            gh_app_private_key_bytes, gh_app_id, gh_app_installation_id
+            gh_app_private_key_bytes, str(gh_app_id), gh_app_installation_id
         )
         github_connection = gh
     elif ghe and token:
@@ -51,9 +51,9 @@ def auth_to_github(
 
 def get_github_app_installation_token(
     ghe: str,
-    gh_app_id: str,
+    gh_app_id: int | None,
     gh_app_private_key_bytes: bytes,
-    gh_app_installation_id: str,
+    gh_app_installation_id: int | None,
 ) -> str | None:
     """
     Get a GitHub App Installation token.
@@ -61,14 +61,16 @@ def get_github_app_installation_token(
 
     Args:
         ghe (str): the GitHub Enterprise endpoint
-        gh_app_id (str): the GitHub App ID
+        gh_app_id (int | None): the GitHub App ID
         gh_app_private_key_bytes (bytes): the GitHub App Private Key
-        gh_app_installation_id (str): the GitHub App Installation ID
+        gh_app_installation_id (int | None): the GitHub App Installation ID
 
     Returns:
         str: the GitHub App token
     """
-    jwt_headers = github3.apps.create_jwt_headers(gh_app_private_key_bytes, gh_app_id)
+    jwt_headers = github3.apps.create_jwt_headers(
+        gh_app_private_key_bytes, str(gh_app_id)
+    )
     api_endpoint = f"{ghe}/api/v3" if ghe else "https://api.github.com"
     url = f"{api_endpoint}/app/installations/{gh_app_installation_id}/access_tokens"
 
