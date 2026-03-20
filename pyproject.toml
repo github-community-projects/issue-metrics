@@ -5,7 +5,7 @@ description = "GitHub Action that measures metrics for GitHub issues, pull reque
 requires-python = ">=3.11"
 dependencies = [
     "github3-py==4.0.1",
-    "numpy==2.4.2",
+    "numpy==2.4.3",
     "python-dotenv==1.2.2",
     "pytz==2026.1.post1",
     "requests==2.32.5",

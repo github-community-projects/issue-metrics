@@ -25,11 +25,11 @@ jobs:
       github.event.pull_request.draft == true
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@58077d3c7e43986b6b15fba718e8ea69e387dfcc # v2.15.1
+        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
         with:
           egress-policy: audit
 
       - name: Mark ready when ready
-        uses: kenyonj/mark-ready-when-ready@33b13c51ba23786efb933701ef253352baf05bdd # main (contents:write fix)
+        uses: kenyonj/mark-ready-when-ready@b6279addd55dd13208965a9eff24b2cf1989a8ef # main (contents:write fix)
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
