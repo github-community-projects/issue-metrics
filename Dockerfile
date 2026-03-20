@@ -29,4 +29,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
 
 ENV PYTHONUNBUFFERED=1
 CMD ["/action/workspace/issue_metrics.py"]
-ENTRYPOINT ["uv", "run", "--project", "/action/workspace"]
+ENTRYPOINT ["uv", "run", "--no-dev", "--project", "/action/workspace"]
