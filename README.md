@@ -109,18 +109,18 @@ All feedback regarding our GitHub Actions, as a whole, should be communicated th
 ## Use as a GitHub Action
 
 1. Create a repository to host this GitHub Action or select an existing repository. This is easiest if it is the same repository as the one you want to measure metrics on.
-2. Select a best fit workflow file from the [examples directory](./docs/example-workflows.md) for your use case.
-3. Copy that example into your repository (from step 1) and into the proper directory for GitHub Actions: `.github/workflows/` directory with the file extension `.yml` (ie. `.github/workflows/issue-metrics.yml`)
-4. Edit the values (`SEARCH_QUERY`, `assignees`) from the sample workflow with your information. See the [SEARCH_QUERY](./docs/search-query.md) section for more information on how to configure the search query.
-5. If you are running metrics on a repository other than the one where the workflow file is going to be, then update the value of `GH_TOKEN`.
+1. Select a best fit workflow file from the [examples directory](./docs/example-workflows.md) for your use case.
+1. Copy that example into your repository (from step 1) and into the proper directory for GitHub Actions: `.github/workflows/` directory with the file extension `.yml` (ie. `.github/workflows/issue-metrics.yml`)
+1. Edit the values (`SEARCH_QUERY`, `assignees`) from the sample workflow with your information. See the [SEARCH_QUERY](./docs/search-query.md) section for more information on how to configure the search query.
+1. If you are running metrics on a repository other than the one where the workflow file is going to be, then update the value of `GH_TOKEN`.
    - Do this by creating a [GitHub API token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic) with permissions to read the repository and write issues.
    - Then take the value of the API token you just created, and [create a repository secret](https://docs.github.com/en/actions/security-guides/encrypted-secrets) where the name of the secret is `GH_TOKEN` and the value of the secret the API token.
    - Then finally update the workflow file to use that repository secret by changing `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` to `GH_TOKEN: ${{ secrets.GH_TOKEN }}`. The name of the secret can really be anything. It just needs to match between when you create the secret name and when you refer to it in the workflow file.
    - Help on verifying your token's access to your repository [in the docs directory](docs/verify-token-access-to-repository.md)
-6. If you want the resulting issue with the metrics in it to appear in a different repository other than the one the workflow file runs in, update the line `token: ${{ secrets.GITHUB_TOKEN }}` with your own GitHub API token stored as a repository secret.
+1. If you want the resulting issue with the metrics in it to appear in a different repository other than the one the workflow file runs in, update the line `token: ${{ secrets.GITHUB_TOKEN }}` with your own GitHub API token stored as a repository secret.
    - This process is the same as described in the step above. More info on creating secrets can be found [in the GitHub docs security guide on encrypted secrets](https://docs.github.com/en/actions/security-guides/encrypted-secrets).
-7. Commit the workflow file to the default branch (often `master` or `main`)
-8. Wait for the action to trigger based on the `schedule` entry or manually trigger the workflow as shown in the [documentation](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow).
+1. Commit the workflow file to the default branch (often `master` or `main`)
+1. Wait for the action to trigger based on the `schedule` entry or manually trigger the workflow as shown in the [documentation](https://docs.github.com/en/actions/using-workflows/manually-running-a-workflow).
 
 ### Configuration
 
@@ -158,7 +158,11 @@ This action can be configured to authenticate with GitHub App Installation or Pe
 | `HIDE_TIME_TO_ANSWER`         | False    | False                                      | If set to `true`, the time to answer a discussion will not be displayed in the generated Markdown file.                                                                                                                                                                                                    |
 | `HIDE_TIME_TO_CLOSE`          | False    | False                                      | If set to `true`, the time to close will not be displayed in the generated Markdown file.                                                                                                                                                                                                                  |
 | `HIDE_TIME_TO_FIRST_RESPONSE` | False    | False                                      | If set to `true`, the time to first response will not be displayed in the generated Markdown file.                                                                                                                                                                                                         |
+<<<<<<< HEAD
 | `HIDE_TIME_TO_FIRST_REVIEW`   | False    | False                                      | If set to `true`, the time to first review will not be displayed in the generated Markdown file.                                                                                                                                                                                                         |
+=======
+| `HIDE_TIME_TO_FIRST_REVIEW`   | False    | False                                      | If set to `true`, the time to first review will not be displayed in the generated Markdown file.                                                                                                                                                                                                           |
+>>>>>>> 14965b3 (doc: README.md edited for time_to_first_review metric)
 | `HIDE_STATUS`                 | False    | True                                       | If set to `true`, the status column will not be shown                                                                                                                                                                                                                                                      |
 | `HIDE_CREATED_AT`             | False    | True                                       | If set to `true`, the creation timestamp will not be displayed in the generated Markdown file.                                                                                                                                                                                                             |
 | `HIDE_PR_STATISTICS`          | False    | True                                       | If set to `true`, PR comment statistics (mean, median, 90th percentile, and individual PR comment counts) will not be displayed in the generated Markdown file.                                                                                                                                            |
@@ -175,7 +179,11 @@ This action can be configured to authenticate with GitHub App Installation or Pe
 | `REPORT_TITLE`                | False    | `"Issue Metrics"`                          | Title to have on the report issue.                                                                                                                                                                                                                                                                         |
 | `SEARCH_QUERY`                | True     | `""`                                       | The query by which you can filter issues/PRs which must contain a `repo:`, `org:`, `owner:`, or a `user:` entry. For discussions, include `type:discussions` in the query.                                                                                                                                 |
 | `GROUP_BY`                    | False    | `""`                                       | Group items in the report by the specified field. Supported values: `author`, `assignee`. When set, items will be grouped into separate sections by the chosen field.                                                                                                                                      |
+<<<<<<< HEAD
 | `SORT_BY`                     | False    | `""`                                       | Sort items in the report by the specified field. Supported values: `time_to_close`, `time_to_first_response`, `time_to_first_review`, `time_to_answer`, `time_in_draft`, `created_at`. When set, items will be sorted by the chosen metric. |
+=======
+| `SORT_BY`                     | False    | `""`                                       | Sort items in the report by the specified field. Supported values: `time_to_close`, `time_to_first_response`, `time_to_first_review`, `time_to_answer`, `time_in_draft`, `created_at`. When set, items will be sorted by the chosen metric.                                                                |
+>>>>>>> 14965b3 (doc: README.md edited for time_to_first_review metric)
 | `SORT_ORDER`                  | False    | `asc`                                      | Sort order for the items. Supported values: `asc` (ascending), `desc` (descending). Only applies when `SORT_BY` is set.                                                                                                                                                                                    |
 
 ## Further Documentation
