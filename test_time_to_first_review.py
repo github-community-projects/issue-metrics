@@ -115,10 +115,10 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_type_error_path(self):
         """Test the except TypeError error handling path."""
         mock_issue = MagicMock()
-        mock_issue.created_at = 12345
+        mock_issue.created_at = "2023-01-01T00:00:00Z"
 
         mock_pr = MagicMock()
-        mock_pr.reviews.return_value = [MagicMock()]
+        mock_pr.reviews.side_effect = TypeError("ghost user")
 
         result = measure_time_to_first_review(mock_issue, mock_pr, None, [])
         self.assertIsNone(result)
