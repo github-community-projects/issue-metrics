@@ -20,7 +20,7 @@ dev = [
     "mypy-extensions==1.1.0",
     "pylint==4.0.5",
     "pytest==9.0.2",
-    "pytest-cov==7.0.0",
+    "pytest-cov==7.1.0",
     "types-pytz==2026.1.1.20260304",
     "types-requests==2.32.4.20260107",
 ]
