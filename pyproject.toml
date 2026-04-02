@@ -22,5 +22,5 @@ dev = [
     "pytest==9.0.2",
     "pytest-cov==7.1.0",
     "types-pytz==2026.1.1.20260304",
-    "types-requests==2.32.4.20260107",
+    "types-requests==2.32.4.20260324",
 ]
