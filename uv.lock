@@ -498,7 +498,7 @@ dev = [
     { name = "pylint", specifier = "==4.0.5" },
     { name = "pytest", specifier = "==9.0.2" },
     { name = "pytest-cov", specifier = "==7.1.0" },
-    { name = "types-pytz", specifier = "==2026.1.1.20260304" },
+    { name = "types-pytz", specifier = "==2026.1.1.20260402" },
     { name = "types-requests", specifier = "==2.33.0.20260402" },
 ]
 
@@ -1009,11 +1009,11 @@ wheels = [
 
 [[package]]
 name = "types-pytz"
-version = "2026.1.1.20260304"
+version = "2026.1.1.20260402"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/fe/56/2f12a15ea8c5615c8fb896c4fbbb527ab1c0f776ed5860c6fc9ec26ea2c7/types_pytz-2026.1.1.20260304.tar.gz", hash = "sha256:0c3542d8e9b0160b424233440c52b83d6f58cae4b85333d54e4f961cf013e117", size = 11198, upload-time = "2026-03-04T03:57:24.445Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/ff/52b895d4cb5f51f4ae50de8ca6a0b4098a71fa174b63f14d80ba86fa0692/types_pytz-2026.1.1.20260402.tar.gz", hash = "sha256:79209aa51dc003a4a6a764234d92b14e5c09a1b7f24e0f00c493929fd33618e8", size = 10726, upload-time = "2026-04-02T04:17:52.603Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/94/b8/e77c355f179dc89d44e7ca6dbf7a46e650806df1d356a5462e5829fccea5/types_pytz-2026.1.1.20260304-py3-none-any.whl", hash = "sha256:175332c1cf7bd6b1cc56b877f70bf02def1a3f75e5adcc05385ce2c3c70e6500", size = 10126, upload-time = "2026-03-04T03:57:23.481Z" },
+    { url = "https://files.pythonhosted.org/packages/79/ce/93d4fc3ba66be6cd50f3f22bbdb6fd953a02689398ea2c4a733e023c9227/types_pytz-2026.1.1.20260402-py3-none-any.whl", hash = "sha256:0d9a60ed1c6ad4fce7c6395b5bd2d9827db41d4b83de7c0322cf85869c2bfda3", size = 10122, upload-time = "2026-04-02T04:17:51.729Z" },
 ]
 
 [[package]]
