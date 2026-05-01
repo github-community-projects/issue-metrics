@@ -16,7 +16,7 @@ dev = [
     "black==26.3.1",
     "flake8==7.3.0",
     "isort==8.0.1",
-    "mypy==1.20.1",
+    "mypy==1.20.2",
     "mypy-extensions==1.1.0",
     "pylint==4.0.5",
     "pytest==9.0.3",
