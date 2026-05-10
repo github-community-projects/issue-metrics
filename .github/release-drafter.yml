@@ -8,6 +8,9 @@ template: |
   See details of [all code changes](https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION) since previous release
 
 categories:
+  - title: "💥 Breaking Changes"
+    labels:
+      - "breaking"
   - title: "🚀 Features"
     labels:
       - "feature"
