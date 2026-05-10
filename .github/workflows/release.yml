@@ -10,41 +10,21 @@ permissions:
 jobs:
   release:
     permissions:
-      contents: write
-      pull-requests: read
-    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release.yaml@a0cf79bd8756e0a9c1555bf4975eae7ce7a8e8dc
+      contents: write       # Create release and push tags
+      pull-requests: read   # Read PR labels for release-drafter
+      packages: write       # Push container image to ghcr.io
+      id-token: write       # Federate for artifact attestation
+      attestations: write   # Generate build provenance attestations
+      discussions: write    # Create release announcement discussion
+    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release.yaml@592067a69a43d2285f933753d89a7c9d51b96530 # v1.0.0
     with:
       publish: true
       release-config-name: release-drafter.yml
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
-  release_image:
-    needs: release
-    permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
-    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release-image.yaml@a0cf79bd8756e0a9c1555bf4975eae7ce7a8e8dc
-    with:
       image-name: ${{ github.repository_owner }}/issue_metrics
-      full-tag: ${{ needs.release.outputs.full-tag }}
-      short-tag: ${{ needs.release.outputs.short-tag }}
+      create-attestation: true
+      create-discussion: true
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
-      image-registry: ghcr.io
-      image-registry-username: ${{ github.actor }}
       image-registry-password: ${{ secrets.GITHUB_TOKEN }}
-  release_discussion:
-    needs: release
-    permissions:
-      contents: read
-      discussions: write
-    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release-discussion.yaml@a0cf79bd8756e0a9c1555bf4975eae7ce7a8e8dc
-    with:
-      full-tag: ${{ needs.release.outputs.full-tag }}
-      body: ${{ needs.release.outputs.body }}
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
       discussion-repository-id: ${{ secrets.RELEASE_DISCUSSION_REPOSITORY_ID }}
       discussion-category-id: ${{ secrets.RELEASE_DISCUSSION_CATEGORY_ID }}
