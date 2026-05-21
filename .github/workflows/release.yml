@@ -16,7 +16,7 @@ jobs:
       id-token: write # Federate for artifact attestation
       attestations: write # Generate build provenance attestations
       discussions: write # Create release announcement discussion
-    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release.yaml@592067a69a43d2285f933753d89a7c9d51b96530 # v1.0.0
+    uses: github-community-projects/ospo-reusable-workflows/.github/workflows/release.yaml@e92cb6053ace495fe40a5f185988557afcdcecbc # v1.0.1
     with:
       publish: true
       release-config-name: release-drafter.yml
