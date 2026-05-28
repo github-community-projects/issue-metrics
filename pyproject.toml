@@ -5,15 +5,15 @@ description = "GitHub Action that measures metrics for GitHub issues, pull reque
 requires-python = ">=3.11"
 dependencies = [
     "github3-py==4.0.1",
-    "numpy==2.4.4",
+    "numpy==2.4.6",
     "python-dotenv==1.2.2",
     "pytz==2026.2",
-    "requests==2.34.1",
+    "requests==2.34.2",
 ]
 
 [dependency-groups]
 dev = [
-    "black==26.3.1",
+    "black==26.5.1",
     "flake8==7.3.0",
     "isort==8.0.1",
     "mypy==2.1.0",
