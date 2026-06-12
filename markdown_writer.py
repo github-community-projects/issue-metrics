@@ -192,7 +192,9 @@ def group_issues(
         elif group_by == "assignee":
             # Use the first assignee or "Unassigned"
             key = issue.assignees[0] if issue.assignees else "Unassigned"
-        else:
+        else:  # pragma: no cover - defensive default; valid_fields guard above
+            # makes this branch unreachable unless valid_fields is extended
+            # without updating this if/elif chain.
             key = "Unknown"
 
         if key not in grouped:

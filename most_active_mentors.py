@@ -112,7 +112,12 @@ def count_comments_per_user(
                 else:
                     mentor_count[review_comment.user.login] = 1
 
-        if discussion and len(discussion["comments"]["nodes"]) > 0:
+        # The discussion branch below is dead in production (tracked in #774):
+        # the GraphQL query in discussions.get_discussions fetches no comment
+        # author data, attribute access on dict nodes would AttributeError,
+        # and the ignore_comment call below passes comment.user as both
+        # issue_user and comment_user (self-reference always True).
+        if discussion and len(discussion["comments"]["nodes"]) > 0:  # pragma: no cover
             for comment in discussion["comments"]["nodes"]:
                 if ignore_comment(
                     comment.user,
