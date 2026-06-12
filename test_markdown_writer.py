@@ -13,7 +13,7 @@ from datetime import timedelta
 from unittest.mock import call, mock_open, patch
 
 from classes import IssueWithMetrics
-from markdown_writer import write_to_markdown
+from markdown_writer import get_non_hidden_columns, write_to_markdown
 
 
 @patch.dict(
@@ -648,6 +648,136 @@ class TestWriteToMarkdownWithEnv(unittest.TestCase):
         )
         self.assertEqual(content, expected_content)
         os.remove("issue_metrics.md")
+
+
+class TestMarkdownWriterExtraBranches(unittest.TestCase):
+    """Covers markdown_writer.py extra column-visibility and row branches."""
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:pr repo:owner/repo",
+            "HIDE_PR_STATISTICS": "false",
+            "HIDE_STATUS": "true",
+            "HIDE_CREATED_AT": "true",
+        },
+    )
+    def test_pr_comments_column_present_when_not_hidden(self):
+        """'PR Comments' column is included when HIDE_PR_STATISTICS is false."""
+
+        columns = get_non_hidden_columns(labels=None)
+        self.assertIn("PR Comments", columns)
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:issue repo:user/repo",
+        },
+    )
+    def test_no_issues_writes_search_query_line(self):
+        """search_query line is written even when there are no issues."""
+
+        output = "coverage_md_no_issues.md"
+        try:
+            write_to_markdown(
+                issues_with_metrics=None,
+                average_time_to_first_response=None,
+                average_time_to_first_review=None,
+                average_time_to_close=None,
+                average_time_to_answer=None,
+                average_time_in_draft=None,
+                average_time_in_labels=None,
+                stats_pr_comments=None,
+                num_issues_opened=None,
+                num_issues_closed=None,
+                num_mentor_count=None,
+                search_query="is:issue repo:user/repo",
+                output_file=output,
+            )
+            with open(output, "r", encoding="utf-8") as f:
+                content = f.read()
+            self.assertIn("Search query used to find these items", content)
+        finally:
+            try:
+                os.remove(output)
+            except OSError:
+                pass
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:pr repo:owner/repo",
+            "HIDE_ITEMS_LIST": "false",
+            "HIDE_PR_STATISTICS": "false",
+            "HIDE_STATUS": "true",
+            "HIDE_CREATED_AT": "true",
+            "HIDE_TIME_TO_FIRST_RESPONSE": "true",
+            "HIDE_TIME_TO_FIRST_REVIEW": "false",
+            "HIDE_TIME_TO_CLOSE": "true",
+            "HIDE_TIME_TO_ANSWER": "true",
+            "HIDE_AUTHOR": "false",
+            "HIDE_ASSIGNEE": "true",
+            "HIDE_LABEL_METRICS": "true",
+            "DRAFT_PR_TRACKING": "true",
+        },
+    )
+    def test_individual_row_includes_pr_comments_and_review_columns(self):
+        """Individual rows include PR comments cell and time-to-first-review row."""
+
+        issue = IssueWithMetrics(
+            title="PR 1",
+            html_url="https://github.com/owner/repo/pull/1",
+            author="alice",
+            assignee=None,
+            assignees=[],
+            pr_comment_count=5,
+            time_in_draft=timedelta(hours=2),
+        )
+        issue.time_to_first_review = timedelta(hours=4)
+        issues = [issue]
+
+        stats_review = {
+            "avg": timedelta(hours=4),
+            "med": timedelta(hours=4),
+            "90p": timedelta(hours=4),
+        }
+        stats_pr_comments = {"avg": 5.0, "med": 5.0, "90p": 5.0}
+
+        output = "coverage_md_row.md"
+        try:
+            write_to_markdown(
+                issues_with_metrics=issues,
+                average_time_to_first_response=None,
+                average_time_to_first_review=stats_review,
+                average_time_to_close=None,
+                average_time_to_answer=None,
+                average_time_in_draft=None,  # drives the None branch.
+                average_time_in_labels=None,
+                stats_pr_comments=stats_pr_comments,
+                num_issues_opened=1,
+                num_issues_closed=0,
+                num_mentor_count=0,
+                search_query="is:pr repo:owner/repo",
+                output_file=output,
+            )
+            with open(output, "r", encoding="utf-8") as f:
+                content = f.read()
+            # PR Comments cell rendered.
+            self.assertIn("| 5 |", content)
+            # Time to first review row written.
+            self.assertIn("Time to first review", content)
+            # Time in draft None branch.
+            self.assertIn("Time in draft | None | None | None", content)
+            # PR comments overall row.
+            self.assertIn("Number of comments per PR", content)
+        finally:
+            try:
+                os.remove(output)
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":

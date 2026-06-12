@@ -57,3 +57,26 @@ class TestGetTimeToReadyForReview(unittest.TestCase):
         result = get_time_to_ready_for_review(issue, pull_request)
         expected_result = None
         self.assertEqual(result, expected_result)
+
+
+class TestTimeToReadyForReviewTypeError(unittest.TestCase):
+    """Covers get_time_to_ready_for_review ghost-user TypeError path."""
+
+    def test_events_raises_type_error_returns_none(self):
+        """A TypeError from pull_request.events() short-circuits to None."""
+
+        pull_request = MagicMock()
+        pull_request.draft = False
+
+        bad_event = MagicMock()
+        # Accessing .event on this MagicMock raises TypeError to simulate
+        # a ghost user reference deep in the github3 response.
+        type(bad_event).event = property(
+            lambda _self: (_ for _ in ()).throw(TypeError("ghost user"))
+        )
+
+        issue = MagicMock()
+        issue.issue.events.return_value = [bad_event]
+
+        result = get_time_to_ready_for_review(issue, pull_request)
+        self.assertIsNone(result)

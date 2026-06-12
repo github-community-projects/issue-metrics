@@ -12,10 +12,13 @@ Classes:
 """
 
 import os
+import runpy
+import sys
 import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call, patch
 
+import github3
 from issue_metrics import (
     IssueWithMetrics,
     evaluate_markdown_file_size,
@@ -607,6 +610,231 @@ split into multiple files. ie. test_issue_metrics.md, test_issue_metrics_1.md, e
 The full file is saved as test_issue_metrics_full.md\n\
 See https://github.com/github-community-projects/issue-metrics/blob/main/docs/dealing-with-large-issue-metrics.md"
         )
+
+
+def _make_pr_search_result(
+    *,
+    title="PR 1",
+    url="https://github.com/owner/repo/pull/1",
+    login="alice",
+    state="open",
+    created_at="2023-01-01T00:00:00Z",
+    closed_at=None,
+    state_reason="completed",
+    is_pull_request=True,
+    pull_request=None,
+):
+    """Build a MagicMock that matches github3.search.IssueSearchResult shape.
+
+    Setting __class__ on the mock makes isinstance(mock,
+    github3.search.IssueSearchResult) return True, which is required for the
+    created_at extraction branch in issue_metrics.py to take the
+    IssueSearchResult path. We avoid spec= because IssueSearchResult does not
+    expose .issue as a class-level attribute.
+    """
+    mock = MagicMock()
+    mock.__class__ = github3.search.IssueSearchResult  # type: ignore
+    mock.title = title
+    mock.html_url = url
+    mock.user = {"login": login}
+    mock.state = state
+    mock.created_at = created_at
+    mock.closed_at = closed_at
+
+    mock.issue.as_dict.return_value = {
+        "assignee": {"login": login},
+        "assignees": [{"login": login}],
+    }
+    mock.issue.state = state
+    mock.issue.state_reason = state_reason
+    mock.issue.created_at = datetime.fromisoformat(created_at)
+    mock.issue.pull_request_urls = (
+        ["https://api.github.com/repos/owner/repo/pulls/1"] if is_pull_request else None
+    )
+    mock.issue.pull_request.return_value = pull_request
+    return mock
+
+
+class TestIssueMetricsExtraBranches(unittest.TestCase):
+    """Covers get_per_issue_metrics branches for discussions and pull requests."""
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:issue repo:user/repo",
+            "ENABLE_MENTOR_COUNT": "true",
+        },
+    )
+    def test_discussion_open_and_enable_mentor_count(self):
+        """Open discussions count mentor activity when ENABLE_MENTOR_COUNT is set."""
+
+        # Open discussion (closedAt None) plus enabled mentor counting.
+        discussion = {
+            "title": "D1",
+            "url": "https://example.com/d/1",
+            "createdAt": "2023-01-01T00:00:00Z",
+            "comments": {"nodes": [{"createdAt": "2023-01-02T00:00:00Z"}]},
+            "answerChosenAt": None,
+            "closedAt": None,
+        }
+
+        with patch("issue_metrics.count_comments_per_user", return_value={"u": 1}):
+            metrics, num_open, num_closed = get_per_issue_metrics(
+                [discussion],
+                discussions=True,
+                env_vars=get_env_vars(test=True),
+            )
+        self.assertEqual(num_open, 1)
+        self.assertEqual(num_closed, 0)
+        self.assertEqual(metrics[0].mentor_activity, {"u": 1})
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:pr repo:owner/repo",
+            "DRAFT_PR_TRACKING": "true",
+            "HIDE_PR_STATISTICS": "false",
+            "ENABLE_MENTOR_COUNT": "true",
+            "HIDE_LABEL_METRICS": "false",
+            "HIDE_TIME_TO_FIRST_REVIEW": "false",
+            "HIDE_STATUS": "false",
+            "HIDE_CREATED_AT": "false",
+            "LABELS_TO_MEASURE": "bug",
+        },
+    )
+    def test_pull_request_branches_with_status_and_created_at(self):
+        """Cover the PR branches for time_in_draft, count_pr_comments,
+        time_to_first_review, count_comments_per_user, get_label_metrics,
+        measure_time_to_merge, status (open and closed), and created_at.
+        """
+
+        mock_pr_obj = MagicMock()
+
+        # Closed PR exercises measure_time_to_merge and the closed status form.
+        closed_pr = _make_pr_search_result(
+            title="Closed PR",
+            url="https://github.com/owner/repo/pull/2",
+            state="closed",
+            closed_at="2023-01-05T00:00:00Z",
+            state_reason="completed",
+            pull_request=mock_pr_obj,
+        )
+        # Open PR exercises the open status branch.
+        open_pr = _make_pr_search_result(
+            title="Open PR",
+            url="https://github.com/owner/repo/pull/3",
+            state="open",
+            pull_request=mock_pr_obj,
+        )
+
+        with (
+            patch("issue_metrics.get_time_to_ready_for_review", return_value=None),
+            patch(
+                "issue_metrics.measure_time_in_draft",
+                return_value=timedelta(hours=2),
+            ),
+            patch("issue_metrics.count_pr_comments", return_value=4),
+            patch(
+                "issue_metrics.measure_time_to_first_review",
+                return_value=timedelta(hours=1),
+            ),
+            patch(
+                "issue_metrics.measure_time_to_first_response",
+                return_value=timedelta(hours=3),
+            ),
+            patch(
+                "issue_metrics.count_comments_per_user",
+                return_value={"reviewer": 2},
+            ),
+            patch(
+                "issue_metrics.get_label_metrics",
+                return_value={"bug": timedelta(days=1)},
+            ),
+            patch(
+                "issue_metrics.measure_time_to_merge",
+                return_value=timedelta(days=4),
+            ),
+        ):
+            env_vars = get_env_vars(test=True)
+            metrics, num_open, num_closed = get_per_issue_metrics(
+                [closed_pr, open_pr],
+                env_vars=env_vars,
+                labels=env_vars.labels_to_measure,
+                ignore_users=[],
+            )
+
+        self.assertEqual(num_open, 1)
+        self.assertEqual(num_closed, 1)
+        # Closed PR uses measure_time_to_merge.
+        self.assertEqual(metrics[0].time_to_close, timedelta(days=4))
+        # Closed status uses the "as state_reason" form.
+        self.assertIn("as", metrics[0].status)
+        # Open status uses just the state value.
+        self.assertEqual(metrics[1].status, "open")
+        # created_at is populated from issue.issue.created_at.
+        self.assertIsNotNone(metrics[0].created_at)
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:pr repo:owner/repo",
+            "DRAFT_PR_TRACKING": "true",
+        },
+    )
+    def test_pull_request_with_ready_for_review_path(self):
+        """Cover the ready_for_review and time_in_draft branches."""
+
+        mock_pr_obj = MagicMock()
+        pr = _make_pr_search_result(pull_request=mock_pr_obj)
+
+        with (
+            patch(
+                "issue_metrics.get_time_to_ready_for_review",
+                return_value=datetime.fromisoformat("2023-01-02T00:00:00Z"),
+            ),
+            patch(
+                "issue_metrics.measure_time_in_draft",
+                return_value=timedelta(days=1),
+            ),
+            patch("issue_metrics.measure_time_to_first_review", return_value=None),
+            patch("issue_metrics.measure_time_to_first_response", return_value=None),
+        ):
+            metrics, _open, _closed = get_per_issue_metrics(
+                [pr],
+                env_vars=get_env_vars(test=True),
+            )
+        self.assertEqual(metrics[0].time_in_draft, timedelta(days=1))
+
+
+class TestIssueMetricsMainGuard(unittest.TestCase):
+    """Covers the `if __name__ == "__main__": main()` guard in issue_metrics."""
+
+    def test_main_guard_invokes_main(self):
+        """Executes issue_metrics as __main__ to cover the if-name guard."""
+
+        original_module = sys.modules.get("issue_metrics")
+        try:
+            sys.modules.pop("issue_metrics", None)
+            # Patch get_env_vars at import-time so main() raises immediately
+            # without doing any real GitHub work. We only need the
+            # `if __name__ == "__main__": main()` line itself to execute
+            # for coverage to register the guard.
+            with patch(
+                "config.get_env_vars",
+                side_effect=SystemExit(0),
+            ):
+                with self.assertRaises(SystemExit):
+                    runpy.run_module("issue_metrics", run_name="__main__")
+        finally:
+            # Restore the originally imported module so other tests see the
+            # same identity for any patches they have applied.
+            if original_module is not None:
+                sys.modules["issue_metrics"] = original_module
+            else:
+                sys.modules.pop("issue_metrics", None)
 
 
 if __name__ == "__main__":

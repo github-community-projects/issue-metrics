@@ -119,3 +119,41 @@ class TestCountCommentsPerUser(unittest.TestCase):
         result = get_mentor_count(issues_with_metrics, 2)
         expected_result = 2
         self.assertEqual(result, expected_result)
+
+
+class TestMostActiveMentorsExtraBranches(unittest.TestCase):
+    """Covers most_active_mentors review-comments path."""
+
+    def _make_issue(self, owner_login="issue_owner"):
+        mock_issue = MagicMock()
+        mock_issue.issue.user.login = owner_login
+        mock_issue.issue.comments.return_value = []
+        return mock_issue
+
+    def test_count_comments_per_user_with_pr_reviews(self):
+        """Reviews from a human reviewer are counted; bots are ignored."""
+
+        mock_issue = self._make_issue()
+
+        # Two reviews from the same human reviewer.
+        review_a = MagicMock()
+        review_a.user.login = "reviewer"
+        review_a.user.type = "User"
+        review_a.submitted_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
+
+        review_b = MagicMock()
+        review_b.user.login = "reviewer"
+        review_b.user.type = "User"
+        review_b.submitted_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
+
+        # One review from a bot (must be ignored by ignore_comment).
+        bot_review = MagicMock()
+        bot_review.user.login = "dependabot"
+        bot_review.user.type = "Bot"
+        bot_review.submitted_at = datetime.fromisoformat("2023-01-04T00:00:00Z")
+
+        mock_pr = MagicMock()
+        mock_pr.reviews.return_value = [review_a, review_b, bot_review]
+
+        result = count_comments_per_user(mock_issue, pull_request=mock_pr)
+        self.assertEqual(result, {"reviewer": 2})

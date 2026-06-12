@@ -1,8 +1,10 @@
 """Tests for the write_to_json function in json_writer.py."""
 
 import json
+import os
 import unittest
 from datetime import timedelta
+from unittest.mock import patch
 
 from classes import IssueWithMetrics
 from json_writer import write_to_json
@@ -278,6 +280,117 @@ class TestWriteToJson(unittest.TestCase):
             ),
             json.dumps(expected_output),
         )
+
+
+class TestJsonWriterExtraBranches(unittest.TestCase):
+    """Covers json_writer.py extra branches."""
+
+    def test_returns_empty_string_when_no_issues(self):
+        """Empty input returns an empty string."""
+
+        result = write_to_json(
+            issues_with_metrics=None,
+            stats_time_to_first_response=None,
+            stats_time_to_first_review=None,
+            stats_time_to_close=None,
+            stats_time_to_answer=None,
+            stats_time_in_draft=None,
+            stats_time_in_labels=None,
+            stats_pr_comments=None,
+            num_issues_opened=0,
+            num_issues_closed=0,
+            num_mentor_count=0,
+            search_query="is:issue repo:user/repo",
+            output_file="",
+        )
+        self.assertEqual(result, "")
+
+    def test_includes_time_to_first_review_and_pr_comments(self):
+        """Review stats and PR comments stats are written to JSON output."""
+
+        issue = IssueWithMetrics(
+            title="PR 1",
+            html_url="https://github.com/owner/repo/pull/1",
+            author="alice",
+            assignee=None,
+            assignees=[],
+            pr_comment_count=3,
+        )
+        # time_to_first_review is not a constructor arg; set it directly.
+        issue.time_to_first_review = timedelta(hours=4)
+        issues = [issue]
+
+        stats_review = {
+            "avg": timedelta(hours=4),
+            "med": timedelta(hours=4),
+            "90p": timedelta(hours=4),
+        }
+        stats_pr_comments = {"avg": 3.0, "med": 3.0, "90p": 3.0}
+
+        out = write_to_json(
+            issues_with_metrics=issues,
+            stats_time_to_first_response=None,
+            stats_time_to_first_review=stats_review,
+            stats_time_to_close=None,
+            stats_time_to_answer=None,
+            stats_time_in_draft=None,
+            stats_time_in_labels=None,
+            stats_pr_comments=stats_pr_comments,
+            num_issues_opened=1,
+            num_issues_closed=0,
+            num_mentor_count=0,
+            search_query="is:pr repo:owner/repo",
+            output_file="coverage_test.json",
+        )
+
+        self.assertIn("4:00:00", out)
+        self.assertIn('"average_pr_comments": 3.0', out)
+
+        # Clean up the file the writer created so the test leaves no artifacts.
+        try:
+            os.remove("coverage_test.json")
+        except OSError:
+            pass
+
+    def test_writes_github_output_when_env_var_present(self):
+        """write_to_json writes to GITHUB_OUTPUT when the env var is set."""
+
+        github_output_path = "coverage_github_output.txt"
+        try:
+            with patch.dict(os.environ, {"GITHUB_OUTPUT": github_output_path}):
+                write_to_json(
+                    issues_with_metrics=[
+                        IssueWithMetrics(
+                            title="I1",
+                            html_url="https://x/1",
+                            author="a",
+                            assignee=None,
+                            assignees=[],
+                        )
+                    ],
+                    stats_time_to_first_response=None,
+                    stats_time_to_first_review=None,
+                    stats_time_to_close=None,
+                    stats_time_to_answer=None,
+                    stats_time_in_draft=None,
+                    stats_time_in_labels=None,
+                    stats_pr_comments=None,
+                    num_issues_opened=1,
+                    num_issues_closed=0,
+                    num_mentor_count=0,
+                    search_query="is:issue repo:user/repo",
+                    output_file="coverage_test_gh.json",
+                )
+
+            with open(github_output_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            self.assertIn("metrics=", content)
+        finally:
+            for path in (github_output_path, "coverage_test_gh.json"):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
 
 
 if __name__ == "__main__":

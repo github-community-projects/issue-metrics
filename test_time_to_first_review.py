@@ -122,3 +122,29 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
 
         result = measure_time_to_first_review(mock_issue, mock_pr, None, [])
         self.assertIsNone(result)
+
+
+class TestTimeToFirstReviewEdgeCases(unittest.TestCase):
+    """Covers measure_time_to_first_review edge-case branches."""
+
+    def test_returns_none_when_issue_or_pr_missing(self):
+        """Function returns None when either input is None."""
+
+        self.assertIsNone(measure_time_to_first_review(None, MagicMock()))
+        self.assertIsNone(measure_time_to_first_review(MagicMock(), None))
+
+    def test_ignore_users_defaults_to_empty_list(self):
+        """ignore_users defaults to an empty list when omitted."""
+
+        mock_issue = MagicMock()
+        mock_issue.created_at = "2023-01-01T00:00:00Z"
+
+        mock_review = MagicMock()
+        mock_review.submitted_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
+
+        mock_pr = MagicMock()
+        mock_pr.reviews.return_value = [mock_review]
+
+        # Omit ignore_users to exercise the default-None branch.
+        result = measure_time_to_first_review(mock_issue, mock_pr)
+        self.assertEqual(result, timedelta(days=1))

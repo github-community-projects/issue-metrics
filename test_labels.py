@@ -296,5 +296,99 @@ class TestGetAverageTimeInLabels(unittest.TestCase):
         self.assertIsNone(metrics["avg"].get("feature"))
 
 
+class TestLabelsCoverageGaps(unittest.TestCase):
+    """Covers labels.py edge-case branches."""
+
+    def test_get_label_metrics_returns_early_when_no_events(self):
+        """Early return when there are no label events."""
+
+        issue = MagicMock()
+        issue.issue = MagicMock(spec=github3.issues.Issue)
+        issue.created_at = "2021-01-01T00:00:00Z"
+        issue.closed_at = "2021-01-05T00:00:00Z"
+        issue.state = "closed"
+        issue.issue.events.return_value = []
+
+        result = get_label_metrics(issue, ["bug"])
+        self.assertEqual(result, {"bug": None})
+
+    def test_get_label_metrics_unlabeled_first_initializes_zero(self):
+        """'unlabeled' event with no prior 'labeled' init."""
+
+        issue = MagicMock()
+        issue.issue = MagicMock(spec=github3.issues.Issue)
+        issue.created_at = "2021-01-01T00:00:00Z"
+        issue.closed_at = "2021-01-05T00:00:00Z"
+        issue.state = "closed"
+        issue.issue.events.return_value = [
+            MagicMock(
+                event="unlabeled",
+                label={"name": "bug"},
+                created_at=datetime(2021, 1, 2, tzinfo=pytz.UTC),
+            ),
+        ]
+
+        result = get_label_metrics(issue, ["bug"])
+        # The unlabeled-only path produces a positive delta (since label was
+        # never explicitly applied, the bookkeeping treats the gap as time
+        # spent unlabeled). The key assertion is that no KeyError was raised
+        # and the value was initialized from None to a timedelta.
+        self.assertIsInstance(result["bug"], timedelta)
+
+    def test_get_label_metrics_open_issue_last_event_unlabeled_skips(self):
+        """Open issue whose last event is 'unlabeled' is skipped."""
+
+        issue = MagicMock()
+        issue.issue = MagicMock(spec=github3.issues.Issue)
+        issue.created_at = "2021-01-01T00:00:00Z"
+        issue.closed_at = None
+        issue.state = "open"
+        issue.issue.events.return_value = [
+            MagicMock(
+                event="labeled",
+                label={"name": "bug"},
+                created_at=datetime(2021, 1, 1, tzinfo=pytz.UTC),
+            ),
+            MagicMock(
+                event="unlabeled",
+                label={"name": "bug"},
+                created_at=datetime(2021, 1, 3, tzinfo=pytz.UTC),
+            ),
+        ]
+
+        result = get_label_metrics(issue, ["bug"])
+        # The last event was 'unlabeled' on an open issue, so the final
+        # open-issue 'now - created' span must not be added.
+        # That leaves only the labeled/unlabeled delta:
+        # labeled at +0d (subtracts 0), unlabeled at +2d (adds 2d) -> 2 days.
+        self.assertEqual(result["bug"], timedelta(days=2))
+
+    def test_get_stats_time_in_labels_skips_none_and_appends(self):
+        """None label_metrics is skipped; second hit appends."""
+
+        issue1 = IssueWithMetrics(
+            "I1",
+            "https://example/1",
+            "alice",
+            labels_metrics={"bug": None, "feature": timedelta(seconds=10)},
+        )
+        issue2 = IssueWithMetrics(
+            "I2",
+            "https://example/2",
+            "bob",
+            labels_metrics={"feature": timedelta(seconds=20)},
+        )
+
+        labels: dict[str, timedelta] = {
+            "bug": timedelta(0),
+            "feature": timedelta(0),
+        }
+        stats = get_stats_time_in_labels([issue1, issue2], labels)
+        # 'bug' had only a None entry, so it gets filled in as None at the end.
+        self.assertIsNone(stats["avg"]["bug"])
+        # 'feature' appears in two issues and is averaged.
+        self.assertEqual(stats["avg"]["feature"], timedelta(seconds=15))
+
+
 if __name__ == "__main__":
     unittest.main()
