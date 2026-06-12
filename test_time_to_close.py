@@ -108,3 +108,18 @@ class TestMeasureTimeToClose(unittest.TestCase):
         result = measure_time_to_close(None, issue)
         expected_result = timedelta(days=2)
         self.assertEqual(result, expected_result)
+
+
+class TestTimeToCloseEdgeCases(unittest.TestCase):
+    """Covers measure_time_to_close edge-case returns."""
+
+    def test_discussion_with_no_closed_at_returns_none(self):
+        """Discussion with closedAt=None returns None."""
+
+        discussion = {"closedAt": None, "createdAt": "2021-01-01T00:00:00Z"}
+        self.assertIsNone(measure_time_to_close(None, discussion))
+
+    def test_neither_issue_nor_discussion_returns_none(self):
+        """Final fallback return None when neither input is provided."""
+
+        self.assertIsNone(measure_time_to_close(None, None))

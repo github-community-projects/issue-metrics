@@ -386,5 +386,23 @@ class TestGetEnvVars(unittest.TestCase):
         )
 
 
+class TestConfigSortOrderFallback(unittest.TestCase):
+    """Covers config.py SORT_ORDER fallback when value is invalid."""
+
+    @patch.dict(
+        os.environ,
+        {
+            "GH_TOKEN": "test_token",
+            "SEARCH_QUERY": "is:issue repo:user/repo",
+            "SORT_ORDER": "sideways",
+        },
+    )
+    def test_invalid_sort_order_defaults_to_asc(self):
+        """An unrecognized SORT_ORDER value is normalized to 'asc'."""
+
+        env_vars = get_env_vars(test=True)
+        self.assertEqual(env_vars.sort_order, "asc")
+
+
 if __name__ == "__main__":
     unittest.main()

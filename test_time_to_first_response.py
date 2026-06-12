@@ -426,3 +426,34 @@ class TestGetStatsTimeToFirstResponse(unittest.TestCase):
         result = get_stats_time_to_first_response(issues_with_metrics)
         expected_result = None
         self.assertEqual(result, expected_result)
+
+
+class TestTimeToFirstResponseEdgeCases(unittest.TestCase):
+    """Covers measure_time_to_first_response edge-case branches."""
+
+    def test_pull_request_reviews_raises_type_error(self):
+        """TypeError raised while iterating reviews is caught."""
+
+        mock_issue = MagicMock()
+        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.issue.user.login = "owner"
+        mock_issue.issue.comments.return_value = []
+
+        # The source wraps the `for` loop (not the .reviews() call) in
+        # try/except TypeError, so we make iteration itself fail.
+        class _RaisingIterator:
+            def __iter__(self):
+                raise TypeError("ghost user")
+
+        mock_pr = MagicMock()
+        mock_pr.reviews.return_value = _RaisingIterator()
+
+        # No issue comments and no review comments -> earliest_response is None
+        # -> function returns None before computing a delta.
+        result = measure_time_to_first_response(mock_issue, None, mock_pr)
+        self.assertIsNone(result)
+
+    def test_returns_none_when_no_issue_and_no_discussion(self):
+        """Final return None fallback when neither input is provided."""
+
+        self.assertIsNone(measure_time_to_first_response(None, None))

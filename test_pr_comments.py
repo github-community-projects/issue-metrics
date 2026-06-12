@@ -134,5 +134,25 @@ class TestGetStatsPRComments(unittest.TestCase):
         self.assertIsNone(result)
 
 
+class TestPRCommentsIgnoreUsersDefault(unittest.TestCase):
+    """Covers pr_comments.py ignore_users default."""
+
+    def test_count_pr_comments_with_default_ignore_users(self):
+        """Default ignore_users falls back to an empty list."""
+
+        mock_comment = MagicMock()
+        mock_comment.user.type = "User"
+        mock_comment.user.login = "alice"
+
+        mock_issue = MagicMock()
+        mock_issue.issue.comments.return_value = [mock_comment]
+
+        mock_pr = MagicMock()
+        mock_pr.review_comments.return_value = []
+
+        result = count_pr_comments(mock_issue, mock_pr)
+        self.assertEqual(result, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
