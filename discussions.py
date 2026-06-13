@@ -31,9 +31,17 @@ def get_discussions(token: str, search_query: str, ghe: str):
                         title
                         url
                         createdAt
-                        comments(first: 1) {
+                        author {
+                            login
+                            __typename
+                        }
+                        comments(first: 100) {
                             nodes {
                                 createdAt
+                                author {
+                                    login
+                                    __typename
+                                }
                             }
                         }
                         answerChosenAt
