@@ -116,9 +116,7 @@ def count_comments_per_user(
     # dicts (not github3 objects). Thread the discussion author as
     # issue_user so we can filter out self-comments correctly.
     if discussion and len(discussion["comments"]["nodes"]) > 0:
-        discussion_author_login = (
-            discussion.get("author") or {}
-        ).get("login", "")
+        discussion_author_login = (discussion.get("author") or {}).get("login", "")
         for comment in discussion["comments"]["nodes"]:
             comment_author = comment.get("author") or {}
             comment_login = comment_author.get("login", "")
