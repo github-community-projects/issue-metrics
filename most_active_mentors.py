@@ -112,27 +112,34 @@ def count_comments_per_user(
                 else:
                     mentor_count[review_comment.user.login] = 1
 
-        # The discussion branch below is dead in production (tracked in #774):
-        # the GraphQL query in discussions.get_discussions fetches no comment
-        # author data, attribute access on dict nodes would AttributeError,
-        # and the ignore_comment call below passes comment.user as both
-        # issue_user and comment_user (self-reference always True).
-        if discussion and len(discussion["comments"]["nodes"]) > 0:  # pragma: no cover
-            for comment in discussion["comments"]["nodes"]:
-                if ignore_comment(
-                    comment.user,
-                    comment.user,
-                    ignore_users,
-                    comment.submitted_at,
-                    comment.ready_for_review_at,
-                ):
-                    continue
+    # The discussion branch: use dict access because GraphQL returns plain
+    # dicts (not github3 objects). Thread the discussion author as
+    # issue_user so we can filter out self-comments correctly.
+    if discussion and len(discussion["comments"]["nodes"]) > 0:
+        discussion_author_login = (discussion.get("author") or {}).get("login", "")
+        for comment in discussion["comments"]["nodes"]:
+            comment_author = comment.get("author") or {}
+            comment_login = comment_author.get("login", "")
+            comment_type = comment_author.get("__typename", "")
+            comment_created_at = comment.get("createdAt")
 
-                # increase the number of comments left by current user by 1
-                if comment.user.login in mentor_count:
-                    mentor_count[comment.user.login] += 1
-                else:
-                    mentor_count[comment.user.login] = 1
+            if (
+                not comment_login
+                # ignore bots
+                or comment_type == "Bot"
+                # ignore comments by the discussion author
+                or comment_login == discussion_author_login
+                # ignore users in the ignore list
+                or comment_login in ignore_users
+                # ignore comments without a timestamp
+                or not comment_created_at
+            ):
+                continue
+
+            if comment_login in mentor_count:
+                mentor_count[comment_login] += 1
+            else:
+                mentor_count[comment_login] = 1
 
     return mentor_count
 
