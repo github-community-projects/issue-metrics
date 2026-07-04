@@ -5,26 +5,27 @@ This module contains a function that measures the time a pull request has been i
 from datetime import datetime, timedelta
 from typing import List, Union
 
-import github3
 import numpy
 import pytz
 from classes import IssueWithMetrics
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 
 
 def measure_time_in_draft(
-    issue: github3.issues.Issue,
-    pull_request: Union[github3.pulls.PullRequest, None] = None,
+    issue: Issue,
+    pull_request: Union[PullRequest, None] = None,
 ) -> Union[timedelta, None]:
     """If a pull request has had time in the draft state, return the cumulative amount of time it was in draft.
 
     args:
-        issue (github3.issues.Issue): A GitHub issue which has been pre-qualified as a pull request.
-        pull_request (github3.pulls.PullRequest, optional): The pull request object.
+        issue (Issue): A GitHub issue which has been pre-qualified as a pull request.
+        pull_request (PullRequest, optional): The pull request object.
 
     returns:
         Union[timedelta, None]: Total time the pull request has spent in draft state.
     """
-    events = list(issue.issue.events())
+    events = list(issue.get_events())
     draft_start = None
     total_draft_time = timedelta(0)
 
@@ -33,9 +34,9 @@ def measure_time_in_draft(
 
     try:
         if pull_request is None:
-            pull_request = issue.issue.pull_request()
+            pull_request = issue.as_pull_request()
 
-        pr_created_at = issue.issue.created_at
+        pr_created_at = issue.created_at
 
         # Look for ready_for_review events to determine if PR was initially draft
         ready_for_review_events = []
@@ -65,7 +66,7 @@ def measure_time_in_draft(
             if (
                 hasattr(pull_request, "draft")
                 and pull_request.draft
-                and issue.issue.state == "open"
+                and issue.state == "open"
             ):
                 # PR was initially created as draft and is still draft
                 draft_start = pr_created_at
@@ -83,7 +84,7 @@ def measure_time_in_draft(
             draft_start = None
 
     # If the PR is currently in draft state, calculate the time in draft up to now
-    if draft_start and issue.issue.state == "open":
+    if draft_start and issue.state == "open":
         total_draft_time += datetime.now(pytz.utc) - draft_start
 
     # Round to the nearest second

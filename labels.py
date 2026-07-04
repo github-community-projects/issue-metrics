@@ -3,39 +3,37 @@
 from datetime import datetime, timedelta
 from typing import List
 
-import github3
 import numpy
 import pytz
 from classes import IssueWithMetrics
+from github.Issue import Issue
 
 
-def get_label_events(
-    issue: github3.issues.Issue, labels: List[str]  # type: ignore
-) -> List[github3.issues.event]:  # type: ignore
+def get_label_events(issue: Issue, labels: List[str]) -> list:
     """
     Get the label events for a given issue if the label is of interest.
 
     Args:
-        issue (github3.issues.Issue): A GitHub issue.
+        issue (Issue): A GitHub issue.
         labels (List[str]): A list of labels of interest.
 
     Returns:
-        List[github3.issues.event]: A list of label events for the given issue.
+        list: A list of label events for the given issue.
     """
     label_events = []
-    for event in issue.issue.events():
-        if event.event in ("labeled", "unlabeled") and event.label["name"] in labels:
+    for event in issue.get_events():
+        if event.event in ("labeled", "unlabeled") and event.label.name in labels:
             label_events.append(event)
 
     return label_events
 
 
-def get_label_metrics(issue: github3.issues.Issue, labels: List[str]) -> dict:
+def get_label_metrics(issue: Issue, labels: List[str]) -> dict:
     """
     Calculate the time spent with the given labels on a given issue.
 
     Args:
-        issue (github3.issues.Issue): A GitHub issue.
+        issue (Issue): A GitHub issue.
         labels (List[str]): A list of labels to measure time spent in.
 
     Returns:
@@ -57,29 +55,23 @@ def get_label_metrics(issue: github3.issues.Issue, labels: List[str]) -> dict:
     # Calculate the time to add or subtract to the time spent in label based on the label events
     for event in label_events:
         # Skip labeling events that have occurred past issue close time
-        if issue.closed_at is not None and (
-            event.created_at >= datetime.fromisoformat(issue.closed_at)
-        ):
+        if issue.closed_at is not None and (event.created_at >= issue.closed_at):
             continue
 
         if event.event == "labeled":
-            labeled[event.label["name"]] = True
-            if event.label["name"] in labels:
-                if label_metrics[event.label["name"]] is None:
-                    label_metrics[event.label["name"]] = timedelta(0)
-                label_metrics[
-                    event.label["name"]
-                ] -= event.created_at - datetime.fromisoformat(issue.created_at)
-                label_last_event_type[event.label["name"]] = "labeled"
+            labeled[event.label.name] = True
+            if event.label.name in labels:
+                if label_metrics[event.label.name] is None:
+                    label_metrics[event.label.name] = timedelta(0)
+                label_metrics[event.label.name] -= event.created_at - issue.created_at
+                label_last_event_type[event.label.name] = "labeled"
         elif event.event == "unlabeled":
-            unlabeled[event.label["name"]] = True
-            if event.label["name"] in labels:
-                if label_metrics[event.label["name"]] is None:
-                    label_metrics[event.label["name"]] = timedelta(0)
-                label_metrics[
-                    event.label["name"]
-                ] += event.created_at - datetime.fromisoformat(issue.created_at)
-                label_last_event_type[event.label["name"]] = "unlabeled"
+            unlabeled[event.label.name] = True
+            if event.label.name in labels:
+                if label_metrics[event.label.name] is None:
+                    label_metrics[event.label.name] = timedelta(0)
+                label_metrics[event.label.name] += event.created_at - issue.created_at
+                label_last_event_type[event.label.name] = "unlabeled"
 
     for label in labels:
         if label in labeled:
@@ -88,18 +80,14 @@ def get_label_metrics(issue: github3.issues.Issue, labels: List[str]) -> dict:
                 # Only add the final (closed_at - created_at) span if the label was still applied at closure.
                 if label_last_event_type.get(label) != "labeled":
                     continue
-                label_metrics[label] += datetime.fromisoformat(
-                    issue.closed_at
-                ) - datetime.fromisoformat(issue.created_at)
+                label_metrics[label] += issue.closed_at - issue.created_at
             else:
                 # skip label if last labeling event is 'unlabeled' and issue is still open
                 if label_last_event_type[label] == "unlabeled":
                     continue
 
                 # if the issue is open, add the time from the issue creation to now
-                label_metrics[label] += datetime.now(pytz.utc) - datetime.fromisoformat(
-                    issue.created_at
-                )
+                label_metrics[label] += datetime.now(pytz.utc) - issue.created_at
 
     return label_metrics
 

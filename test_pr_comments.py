@@ -24,14 +24,14 @@ class TestCountPRComments(unittest.TestCase):
         mock_comment2 = MagicMock()
         mock_comment2.user.type = "User"
         mock_comment2.user.login = "user2"
-        mock_issue.issue.comments.return_value = [mock_comment1, mock_comment2]
+        mock_issue.get_comments.return_value = [mock_comment1, mock_comment2]
 
         # Mock pull request with review comments
         mock_pull_request = MagicMock()
         mock_review_comment1 = MagicMock()
         mock_review_comment1.user.type = "User"
         mock_review_comment1.user.login = "user3"
-        mock_pull_request.review_comments.return_value = [mock_review_comment1]
+        mock_pull_request.get_review_comments.return_value = [mock_review_comment1]
 
         result = count_pr_comments(mock_issue, mock_pull_request, [])
         self.assertEqual(result, 3)
@@ -46,10 +46,10 @@ class TestCountPRComments(unittest.TestCase):
         mock_user_comment = MagicMock()
         mock_user_comment.user.type = "User"
         mock_user_comment.user.login = "user1"
-        mock_issue.issue.comments.return_value = [mock_bot_comment, mock_user_comment]
+        mock_issue.get_comments.return_value = [mock_bot_comment, mock_user_comment]
 
         mock_pull_request = MagicMock()
-        mock_pull_request.review_comments.return_value = []
+        mock_pull_request.get_review_comments.return_value = []
 
         result = count_pr_comments(mock_issue, mock_pull_request, [])
         self.assertEqual(result, 1)
@@ -64,10 +64,10 @@ class TestCountPRComments(unittest.TestCase):
         mock_comment2 = MagicMock()
         mock_comment2.user.type = "User"
         mock_comment2.user.login = "regular_user"
-        mock_issue.issue.comments.return_value = [mock_comment1, mock_comment2]
+        mock_issue.get_comments.return_value = [mock_comment1, mock_comment2]
 
         mock_pull_request = MagicMock()
-        mock_pull_request.review_comments.return_value = []
+        mock_pull_request.get_review_comments.return_value = []
 
         result = count_pr_comments(mock_issue, mock_pull_request, ["ignored_user"])
         self.assertEqual(result, 1)
@@ -88,10 +88,10 @@ class TestCountPRComments(unittest.TestCase):
         """Test that exceptions are handled gracefully."""
         # Mock issue that raises exception
         mock_issue = MagicMock()
-        mock_issue.issue.comments.side_effect = AttributeError("No comments")
+        mock_issue.get_comments.side_effect = AttributeError("No comments")
 
         mock_pull_request = MagicMock()
-        mock_pull_request.review_comments.side_effect = AttributeError(
+        mock_pull_request.get_review_comments.side_effect = AttributeError(
             "No review comments"
         )
 
@@ -145,10 +145,10 @@ class TestPRCommentsIgnoreUsersDefault(unittest.TestCase):
         mock_comment.user.login = "alice"
 
         mock_issue = MagicMock()
-        mock_issue.issue.comments.return_value = [mock_comment]
+        mock_issue.get_comments.return_value = [mock_comment]
 
         mock_pr = MagicMock()
-        mock_pr.review_comments.return_value = []
+        mock_pr.get_review_comments.return_value = []
 
         result = count_pr_comments(mock_issue, mock_pr)
         self.assertEqual(result, 1)

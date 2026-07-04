@@ -5,7 +5,7 @@ request, as well as calculating the average time to merge for a list of pull req
 
 Functions:
     measure_time_to_merge(
-        pull_request: github3.pulls.PullRequest,
+        pull_request: github.PullRequest.PullRequest,
         ready_for_review_at: Union[datetime, None]
     ) -> Union[timedelta, None]:
         Measure the time it takes to merge a pull request.
@@ -15,16 +15,16 @@ Functions:
 from datetime import datetime, timedelta
 from typing import Union
 
-import github3
+from github.PullRequest import PullRequest
 
 
 def measure_time_to_merge(
-    pull_request: github3.pulls.PullRequest, ready_for_review_at: Union[datetime, None]
+    pull_request: PullRequest, ready_for_review_at: Union[datetime, None]
 ) -> Union[timedelta, None]:
     """Measure the time it takes to merge a pull request.
 
     Args:
-        pull_request (github3.pulls.PullRequest): A GitHub pull request.
+        pull_request (PullRequest): A GitHub pull request.
         ready_for_review_at (Union[timedelta, None]): When the PR was marked as ready for review
 
     Returns:

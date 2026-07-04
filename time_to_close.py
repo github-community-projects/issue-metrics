@@ -5,7 +5,7 @@ or discussion, as well as calculating stats describing the time to close for a l
 
 Functions:
     measure_time_to_close(
-        issue: Union[github3.issues.Issue, None],
+        issue: Union[github.Issue.Issue, None],
         discussion: Union[dict, None]
     ) -> Union[timedelta, None]:
         Measure the time it takes to close an issue or discussion.
@@ -19,18 +19,18 @@ Functions:
 from datetime import datetime, timedelta
 from typing import List, Union
 
-import github3
 import numpy
 from classes import IssueWithMetrics
+from github.Issue import Issue
 
 
 def measure_time_to_close(
-    issue: Union[github3.issues.Issue, None], discussion: Union[dict, None]  # type: ignore
+    issue: Union[Issue, None], discussion: Union[dict, None]
 ) -> Union[timedelta, None]:
     """Measure the time it takes to close an issue or discussion.
 
     Args:
-        issue (Union[github3.issues.Issue, None]): A GitHub issue.
+        issue (Union[Issue, None]): A GitHub issue.
         discussion (Union[dict, None]): A GitHub discussion.
 
     Returns:
@@ -41,8 +41,8 @@ def measure_time_to_close(
     if issue:
         if issue.state != "closed":
             return None
-        closed_at = datetime.fromisoformat(issue.closed_at)
-        created_at = datetime.fromisoformat(issue.created_at)
+        closed_at = issue.closed_at
+        created_at = issue.created_at
 
     if discussion:
         if discussion["closedAt"] is None:

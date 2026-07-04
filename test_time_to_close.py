@@ -11,7 +11,7 @@ Classes:
 """
 
 import unittest
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 from classes import IssueWithMetrics
@@ -78,8 +78,8 @@ class TestMeasureTimeToClose(unittest.TestCase):
         # Create a mock issue object
         issue = MagicMock()
         issue.state = "closed"
-        issue.created_at = "2021-01-01T00:00:00Z"
-        issue.closed_at = "2021-01-03T00:00:00Z"
+        issue.created_at = datetime.fromisoformat("2021-01-01T00:00:00Z")
+        issue.closed_at = datetime.fromisoformat("2021-01-03T00:00:00Z")
 
         # Call the function and check the result
         result = measure_time_to_close(issue, None)

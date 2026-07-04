@@ -5,8 +5,8 @@ excluding bot comments, and calculating statistics about comment counts.
 
 Functions:
     count_pr_comments(
-        issue: Union[github3.issues.Issue, None],
-        pull_request: Union[github3.pulls.PullRequest, None],
+        issue: Union[github.Issue.Issue, None],
+        pull_request: Union[github.PullRequest.PullRequest, None],
         ignore_users: Union[List[str], None] = None,
     ) -> Union[int, None]:
         Count the number of comments on a pull request, excluding bot comments.
@@ -18,21 +18,22 @@ Functions:
 
 from typing import List, Union
 
-import github3
 import numpy
 from classes import IssueWithMetrics
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 
 
 def count_pr_comments(
-    issue: Union[github3.issues.Issue, None],  # type: ignore
-    pull_request: Union[github3.pulls.PullRequest, None] = None,
+    issue: Union[Issue, None],
+    pull_request: Union[PullRequest, None] = None,
     ignore_users: Union[List[str], None] = None,
 ) -> Union[int, None]:
     """Count the number of comments on a pull request, excluding bot comments.
 
     Args:
-        issue (Union[github3.issues.Issue, None]): A GitHub issue.
-        pull_request (Union[github3.pulls.PullRequest, None]): A GitHub pull request.
+        issue (Union[Issue, None]): A GitHub issue.
+        pull_request (Union[PullRequest, None]): A GitHub pull request.
         ignore_users (Union[List[str], None]): A list of GitHub usernames to ignore.
 
     Returns:
@@ -49,7 +50,7 @@ def count_pr_comments(
 
     # Count issue comments
     try:
-        comments = issue.issue.comments()  # type: ignore
+        comments = issue.get_comments()
         for comment in comments:
             # Skip bot comments and ignored users
             if (
@@ -63,12 +64,12 @@ def count_pr_comments(
 
     # Count pull request review comments
     try:
-        review_comments = pull_request.review_comments()
-        for comment in review_comments:
+        review_comments = pull_request.get_review_comments()
+        for review_comment in review_comments:
             # Skip bot comments and ignored users
             if (
-                str(comment.user.type.lower()) != "bot"
-                and comment.user.login not in ignore_users
+                str(review_comment.user.type.lower()) != "bot"
+                and review_comment.user.login not in ignore_users
             ):
                 comment_count += 1
     except (AttributeError, TypeError):

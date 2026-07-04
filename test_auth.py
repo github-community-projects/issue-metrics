@@ -11,25 +11,33 @@ Classes:
 import unittest
 from unittest.mock import MagicMock, patch
 
-import github3
-import requests
 from auth import auth_to_github, get_github_app_installation_token
+from github import Github
 
 
 class TestAuthToGithub(unittest.TestCase):
     """Test the auth_to_github function."""
 
-    @patch("github3.github.GitHub.login_as_app_installation")
-    def test_auth_to_github_with_github_app(self, mock_login):
+    @patch("auth.Auth")
+    @patch("auth.Github")
+    def test_auth_to_github_with_github_app(self, mock_github_cls, mock_auth):
         """
         Test the auth_to_github function when GitHub app
         parameters provided.
         """
-        mock_login.return_value = MagicMock()
+        mock_app_auth = MagicMock()
+        mock_auth.AppAuth.return_value = mock_app_auth
+        mock_installation_auth = MagicMock()
+        mock_app_auth.get_installation_auth.return_value = mock_installation_auth
+        mock_github_instance = MagicMock()
+        mock_github_cls.return_value = mock_github_instance
+
         result = auth_to_github("", 12345, 678910, b"hello", "", False)
 
-        mock_login.assert_called_once_with(b"hello", "12345", 678910)
-        self.assertIsInstance(result, github3.github.GitHub, False)
+        mock_auth.AppAuth.assert_called_once_with(12345, "hello")
+        mock_app_auth.get_installation_auth.assert_called_once_with(678910)
+        mock_github_cls.assert_called_once_with(auth=mock_installation_auth)
+        self.assertEqual(result, mock_github_instance)
 
     def test_auth_to_github_with_token(self):
         """
@@ -37,7 +45,7 @@ class TestAuthToGithub(unittest.TestCase):
         """
         result = auth_to_github("token", None, None, b"", "", False)
 
-        self.assertIsInstance(result, github3.github.GitHub, False)
+        self.assertIsInstance(result, Github)
 
     def test_auth_to_github_without_authentication_information(self):
         """
@@ -55,51 +63,95 @@ class TestAuthToGithub(unittest.TestCase):
             "token", None, None, b"", "https://github.example.com", False
         )
 
-        self.assertIsInstance(result, github3.github.GitHubEnterprise, False)
+        self.assertIsInstance(result, Github)
 
-    @patch("github3.github.GitHubEnterprise")
-    def test_auth_to_github_with_ghe_and_ghe_app(self, mock_ghe):
+    @patch("auth.Auth")
+    @patch("auth.Github")
+    def test_auth_to_github_with_ghe_and_ghe_app(self, mock_github_cls, mock_auth):
         """
         Test the auth_to_github function when the GitHub Enterprise URL \
             is provided and the app was created in GitHub Enterprise URL.
         """
-        mock = mock_ghe.return_value
-        mock.login_as_app_installation = MagicMock(return_value=True)
+        mock_app_auth = MagicMock()
+        mock_auth.AppAuth.return_value = mock_app_auth
+        mock_installation_auth = MagicMock()
+        mock_app_auth.get_installation_auth.return_value = mock_installation_auth
+        mock_github_instance = MagicMock()
+        mock_github_cls.return_value = mock_github_instance
+
         result = auth_to_github(
             "", 123, 456, b"123", "https://github.example.com", True
         )
-        mock.login_as_app_installation.assert_called_once_with(b"123", "123", 456)
-        self.assertEqual(result, mock)
+        mock_auth.AppAuth.assert_called_once_with(123, "123")
+        mock_app_auth.get_installation_auth.assert_called_once_with(456)
+        mock_github_cls.assert_called_once_with(
+            base_url="https://github.example.com/api/v3",
+            auth=mock_installation_auth,
+        )
+        self.assertEqual(result, mock_github_instance)
 
-    @patch("github3.apps.create_jwt_headers", MagicMock(return_value="gh_token"))
-    @patch("requests.post")
-    def test_get_github_app_installation_token(self, mock_post):
+    @patch("auth.GithubIntegration")
+    @patch("auth.Auth")
+    def test_get_github_app_installation_token(self, mock_auth, mock_gi_cls):
         """
         Test the get_github_app_installation_token function.
         """
         dummy_token = "dummytoken"
-        mock_response = MagicMock()
-        mock_response.raise_for_status.return_value = None
-        mock_response.json.return_value = {"token": dummy_token}
-        mock_post.return_value = mock_response
-        mock_ghe = ""
+        mock_app_auth = MagicMock()
+        mock_auth.AppAuth.return_value = mock_app_auth
+        mock_gi = MagicMock()
+        mock_gi_cls.return_value = mock_gi
+        mock_access_token = MagicMock()
+        mock_access_token.token = dummy_token
+        mock_gi.get_access_token.return_value = mock_access_token
 
         result = get_github_app_installation_token(
-            mock_ghe, "gh_app_id", b"gh_private_token", "gh_installation_id"
+            "", 12345, b"gh_private_token", 678910
         )
 
         self.assertEqual(result, dummy_token)
 
-    @patch("github3.apps.create_jwt_headers", MagicMock(return_value="gh_token"))
-    @patch("auth.requests.post")
-    def test_get_github_app_installation_token_request_failure(self, mock_post):
+    @patch("auth.GithubIntegration")
+    @patch("auth.Auth")
+    def test_get_github_app_installation_token_with_ghe(self, mock_auth, mock_gi_cls):
+        """
+        Test the get_github_app_installation_token function with a GHE URL.
+        """
+        dummy_token = "dummytoken"
+        mock_app_auth = MagicMock()
+        mock_auth.AppAuth.return_value = mock_app_auth
+        mock_gi = MagicMock()
+        mock_gi_cls.return_value = mock_gi
+        mock_access_token = MagicMock()
+        mock_access_token.token = dummy_token
+        mock_gi.get_access_token.return_value = mock_access_token
+
+        result = get_github_app_installation_token(
+            "https://github.example.com", 12345, b"gh_private_token", 678910
+        )
+
+        mock_gi_cls.assert_called_once_with(
+            auth=mock_app_auth, base_url="https://github.example.com/api/v3"
+        )
+        self.assertEqual(result, dummy_token)
+
+    def test_get_github_app_installation_token_returns_none_for_missing_ids(self):
+        """
+        Test that get_github_app_installation_token returns None when app IDs are None.
+        """
+        result = get_github_app_installation_token("", None, b"private_key", 678910)
+        self.assertIsNone(result)
+
+        result = get_github_app_installation_token("", 12345, b"private_key", None)
+        self.assertIsNone(result)
+
+    @patch("auth.Auth")
+    def test_get_github_app_installation_token_request_failure(self, mock_auth):
         """
         Test the get_github_app_installation_token function returns None when the request fails.
         """
-        # Mock the post request to raise a RequestException
-        mock_post.side_effect = requests.exceptions.RequestException("Request failed")
+        mock_auth.AppAuth.side_effect = ValueError("Auth failed")
 
-        # Call the function with test data
         result = get_github_app_installation_token(
             ghe="https://api.github.com",
             gh_app_id=12345,
@@ -107,16 +159,18 @@ class TestAuthToGithub(unittest.TestCase):
             gh_app_installation_id=678910,
         )
 
-        # Assert that the result is None
         self.assertIsNone(result)
 
-    @patch("github3.login")
-    def test_auth_to_github_invalid_credentials(self, mock_login):
+    @patch("auth.Github")
+    @patch("auth.Auth")
+    def test_auth_to_github_invalid_credentials(self, mock_auth, mock_github_cls):
         """
         Test the auth_to_github function raises correct ValueError
         when credentials are present but incorrect.
         """
-        mock_login.return_value = None
+        mock_token = MagicMock()
+        mock_auth.Token.return_value = mock_token
+        mock_github_cls.return_value = None
         with self.assertRaises(ValueError) as context_manager:
             auth_to_github("not_a_valid_token", "", "", b"", "", False)
 

@@ -1,10 +1,9 @@
 """Unit tests for the search module."""
 
 import unittest
-from unittest.mock import MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock
 
-import github3
-import requests
+from github import GithubException
 from search import get_owners_and_repositories, print_error_messages, search_issues
 
 
@@ -29,21 +28,14 @@ class TestSearchIssues(unittest.TestCase):
     def test_search_issues_with_owner_and_repository(self):
         """Test that search_issues with owner/repo returns the correct issues."""
 
-        # Set up the mock GitHub connection object
         mock_issues = [
             MagicMock(title="Issue 1"),
             MagicMock(title="Issue 2"),
         ]
 
-        # simulating github3.structs.SearchIterator return value
-        mock_search_result = MagicMock()
-        mock_search_result.__iter__.return_value = iter(mock_issues)
-        mock_search_result.ratelimit_remaining = 30
-
         mock_connection = MagicMock()
-        mock_connection.search_issues.return_value = mock_search_result
+        mock_connection.search_issues.return_value = mock_issues
 
-        # Call search_issues and check that it returns the correct issues
         repo_with_owner = {"owner": "owner1", "repository": "repo1"}
         owners_and_repositories = [repo_with_owner]
         issues = search_issues("is:open", mock_connection, owners_and_repositories)
@@ -52,22 +44,15 @@ class TestSearchIssues(unittest.TestCase):
     def test_search_issues_with_just_owner_or_org(self):
         """Test that search_issues with just an owner/org returns the correct issues."""
 
-        # Set up the mock GitHub connection object
         mock_issues = [
             MagicMock(title="Issue 1"),
             MagicMock(title="Issue 2"),
             MagicMock(title="Issue 3"),
         ]
 
-        # simulating github3.structs.SearchIterator return value
-        mock_search_result = MagicMock()
-        mock_search_result.__iter__.return_value = iter(mock_issues)
-        mock_search_result.ratelimit_remaining = 30
-
         mock_connection = MagicMock()
-        mock_connection.search_issues.return_value = mock_search_result
+        mock_connection.search_issues.return_value = mock_issues
 
-        # Call search_issues and check that it returns the correct issues
         org = {"owner": "org1"}
         owners = [org]
         issues = search_issues("is:open", mock_connection, owners)
@@ -76,22 +61,15 @@ class TestSearchIssues(unittest.TestCase):
     def test_search_issues_with_just_owner_or_org_with_bypass(self):
         """Test that search_issues with just an owner/org returns the correct issues."""
 
-        # Set up the mock GitHub connection object
         mock_issues = [
             MagicMock(title="Issue 1"),
             MagicMock(title="Issue 2"),
             MagicMock(title="Issue 3"),
         ]
 
-        # simulating github3.structs.SearchIterator return value
-        mock_search_result = MagicMock()
-        mock_search_result.__iter__.return_value = iter(mock_issues)
-        mock_search_result.ratelimit_remaining = 30
-
         mock_connection = MagicMock()
-        mock_connection.search_issues.return_value = mock_search_result
+        mock_connection.search_issues.return_value = mock_issues
 
-        # Call search_issues and check that it returns the correct issues
         org = {"owner": "org1"}
         owners = [org]
         issues = search_issues(
@@ -160,112 +138,72 @@ class TestGetOwnerAndRepository(unittest.TestCase):
 
 
 class TestSearchCoverageGaps(unittest.TestCase):
-    """Covers search.py rate-limit, exception, and parser branches."""
-
-    @patch("search.sleep", return_value=None)
-    def test_wait_for_api_refresh_retries_then_succeeds(self, mock_sleep):
-        """Low rate limit sleeps and then continues once the limit refills."""
-        iterator = MagicMock()
-        # Sequence: low first, then refilled, then refilled (final exit).
-        type(iterator).ratelimit_remaining = PropertyMock(side_effect=[1, 30, 30])
-        iterator.__iter__.return_value = iter([MagicMock(title="I1")])
-
-        connection = MagicMock()
-        connection.search_issues.return_value = iterator
-
-        issues = search_issues(
-            "is:open", connection, [{"owner": "o", "repository": "r"}]
-        )
-        self.assertEqual(len(issues), 1)
-        mock_sleep.assert_called()  # We did sleep at least once.
-
-    @patch("search.sleep", return_value=None)
-    def test_wait_for_api_refresh_exceeds_max_retries(self, _mock_sleep):
-        """RuntimeError after the maximum number of rate-limit retries."""
-
-        iterator = MagicMock()
-        iterator.ratelimit_remaining = 0  # always too low
-        iterator.__iter__.return_value = iter([])
-
-        connection = MagicMock()
-        connection.search_issues.return_value = iterator
-
-        with self.assertRaises(RuntimeError):
-            search_issues("is:open", connection, [])
-
-    def test_periodic_refresh_after_full_page(self):
-        """Refresh is invoked after each full page of results."""
-
-        # 101 issues forces the modulo branch (idx % issues_per_page == 0).
-        page_size_threshold = 100
-        issues_list = [MagicMock(title=f"I{i}") for i in range(page_size_threshold + 1)]
-
-        iterator = MagicMock()
-        iterator.ratelimit_remaining = 30
-        iterator.__iter__.return_value = iter(issues_list)
-
-        connection = MagicMock()
-        connection.search_issues.return_value = iterator
-
-        # Rate-limit bypass keeps the refresh call a no-op so we can assert the
-        # full iteration completed without exercising the sleep path.
-        result = search_issues("is:open", connection, [], rate_limit_bypass=True)
-        self.assertEqual(len(result), page_size_threshold + 1)
+    """Covers search.py exception and parser branches."""
 
     def _assert_exception_exits(self, exception_instance):
 
-        iterator = MagicMock()
-        iterator.ratelimit_remaining = 30
-        iterator.__iter__.side_effect = exception_instance
-
-        connection = MagicMock()
-        connection.search_issues.return_value = iterator
+        mock_connection = MagicMock()
+        mock_connection.search_issues.side_effect = exception_instance
 
         with self.assertRaises(SystemExit):
             search_issues(
                 "is:open",
-                connection,
+                mock_connection,
                 [{"owner": "o", "repository": "r"}],
                 rate_limit_bypass=True,
             )
 
     def test_forbidden_error_exits(self):
-        """ForbiddenError from github3 triggers a clean SystemExit."""
-        resp = MagicMock(status_code=403)
-        resp.json.return_value = {"message": "forbidden"}
-        self._assert_exception_exits(github3.exceptions.ForbiddenError(resp))
-
-    def test_not_found_error_exits(self):
-        """NotFoundError from github3 triggers a clean SystemExit."""
-        resp = MagicMock(status_code=404)
-        resp.json.return_value = {"message": "not found"}
-        self._assert_exception_exits(github3.exceptions.NotFoundError(resp))
-
-    def test_connection_error_exits(self):
-        """ConnectionError wrapping a requests error triggers SystemExit."""
+        """403 GithubException triggers a clean SystemExit."""
         self._assert_exception_exits(
-            github3.exceptions.ConnectionError(requests.ConnectionError("boom"))
+            GithubException(403, {"message": "forbidden"}, None)
         )
 
+    def test_not_found_error_exits(self):
+        """404 GithubException triggers a clean SystemExit."""
+        self._assert_exception_exits(
+            GithubException(404, {"message": "not found"}, None)
+        )
+
+    def test_connection_error_exits(self):
+        """ConnectionError triggers SystemExit."""
+        self._assert_exception_exits(ConnectionError("boom"))
+
     def test_authentication_failed_exits(self):
-        """AuthenticationFailed from github3 triggers a clean SystemExit."""
-        resp = MagicMock(status_code=401)
-        resp.json.return_value = {"message": "auth failed"}
-        self._assert_exception_exits(github3.exceptions.AuthenticationFailed(resp))
+        """401 GithubException triggers a clean SystemExit."""
+        self._assert_exception_exits(
+            GithubException(401, {"message": "auth failed"}, None)
+        )
 
     def test_unprocessable_entity_exits(self):
-        """UnprocessableEntity from github3 triggers a clean SystemExit."""
-        resp = MagicMock(status_code=422)
-        resp.json.return_value = {
-            "message": "Validation Failed",
-            "errors": [{"message": "bad query"}],
-        }
-        self._assert_exception_exits(github3.exceptions.UnprocessableEntity(resp))
+        """422 GithubException triggers a clean SystemExit."""
+        self._assert_exception_exits(
+            GithubException(
+                422,
+                {
+                    "message": "Validation Failed",
+                    "errors": [{"message": "bad query"}],
+                },
+                None,
+            )
+        )
+
+    def test_generic_github_exception_exits(self):
+        """Generic GithubException triggers a clean SystemExit."""
+        self._assert_exception_exits(
+            GithubException(500, {"message": "server error"}, None)
+        )
 
     def test_print_error_messages_with_errors_attr(self):
-        """print_error_messages iterates over .errors when present."""
+        """print_error_messages iterates over .data['errors'] when present."""
+        error = GithubException(
+            422,
+            {"errors": [{"message": "bad query"}, {"message": "another"}]},
+            None,
+        )
+        print_error_messages(error)
 
-        error = MagicMock()
-        error.errors = [{"message": "bad query"}, {"message": "another"}]
-        # Should not raise.
+    def test_print_error_messages_without_errors(self):
+        """print_error_messages handles exceptions without error details."""
+        error = GithubException(500, {"message": "server error"}, None)
         print_error_messages(error)
