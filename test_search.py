@@ -169,6 +169,10 @@ class TestSearchCoverageGaps(unittest.TestCase):
         """ConnectionError triggers SystemExit."""
         self._assert_exception_exits(ConnectionError("boom"))
 
+    def test_os_error_exits(self):
+        """OSError (parent of requests.ConnectionError) triggers SystemExit."""
+        self._assert_exception_exits(OSError("network unreachable"))
+
     def test_authentication_failed_exits(self):
         """401 GithubException triggers a clean SystemExit."""
         self._assert_exception_exits(

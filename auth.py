@@ -64,7 +64,7 @@ def get_github_app_installation_token(
         gh_app_installation_id (int | None): the GitHub App Installation ID
 
     Returns:
-        str: the GitHub App token
+        str | None: the GitHub App token, or None if IDs are missing or token fetch fails.
     """
     if gh_app_id is None or gh_app_installation_id is None:
         return None

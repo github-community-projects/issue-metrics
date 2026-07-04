@@ -25,7 +25,7 @@ def measure_time_to_merge(
 
     Args:
         pull_request (PullRequest): A GitHub pull request.
-        ready_for_review_at (Union[timedelta, None]): When the PR was marked as ready for review
+        ready_for_review_at (Union[datetime, None]): When the PR was marked as ready for review
 
     Returns:
         Union[datetime.timedelta, None]: The time it takes to close the issue.

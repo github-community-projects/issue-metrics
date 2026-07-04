@@ -54,6 +54,7 @@ class TestMeasureTimeToFirstResponse(unittest.TestCase):
         mock_issue1.comments = 0
         mock_issue1.user.login = "issue_owner"
         mock_issue1.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
+        mock_issue1.get_comments.return_value = []
 
         # Call the function
         result = measure_time_to_first_response(mock_issue1, None)

@@ -36,7 +36,7 @@ def search_issues(  # pylint: disable=unused-argument
     print("Searching for issues...")
     try:
         issues = []
-        search_results = github_connection.search_issues(search_query)
+        search_results = github_connection.search_issues(search_query, per_page=100)
         for issue in search_results:
             print(issue.title)
             issues.append(issue)
@@ -65,7 +65,7 @@ Check the repository owner and names: '{repos_and_owners_string}")
             print(f"An error occurred: {e}")
             print_error_messages(e)
             sys.exit(1)
-    except ConnectionError as e:
+    except (ConnectionError, OSError) as e:
         print(
             "There was a connection error; Check your internet connection or API Token."
         )
