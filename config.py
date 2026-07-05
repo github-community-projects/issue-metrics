@@ -55,7 +55,6 @@ class EnvVars:
             in the destination repository
         report_title (str): The title of the report
         output_file (str): The name of the file to write the report to
-        rate_limit_bypass (bool): If set to TRUE, bypass the rate limit for the GitHub API
         draft_pr_tracking (bool): If set to TRUE, track PR time in draft state
             in addition to other metrics
         hide_pr_statistics (bool): If set to TRUE, hide PR comment statistics in the output
@@ -93,7 +92,6 @@ class EnvVars:
         non_mentioning_links: bool,
         report_title: str,
         output_file: str,
-        rate_limit_bypass: bool = False,
         draft_pr_tracking: bool = False,
         hide_pr_statistics: bool = True,
         hide_items_list: bool = False,
@@ -127,7 +125,6 @@ class EnvVars:
         self.non_mentioning_links = non_mentioning_links
         self.report_title = report_title
         self.output_file = output_file
-        self.rate_limit_bypass = rate_limit_bypass
         self.draft_pr_tracking = draft_pr_tracking
         self.hide_pr_statistics = hide_pr_statistics
         self.hide_items_list = hide_items_list
@@ -164,7 +161,6 @@ class EnvVars:
             f"{self.non_mentioning_links}, "
             f"{self.report_title}, "
             f"{self.output_file}, "
-            f"{self.rate_limit_bypass}, "
             f"{self.draft_pr_tracking}, "
             f"{self.hide_pr_statistics}, "
             f"{self.hide_items_list}, "
@@ -255,7 +251,6 @@ def get_env_vars(test: bool = False) -> EnvVars:
 
     report_title = os.getenv("REPORT_TITLE", "Issue Metrics")
     output_file = os.getenv("OUTPUT_FILE", "")
-    rate_limit_bypass = get_bool_env_var("RATE_LIMIT_BYPASS", False)
     draft_pr_tracking = get_bool_env_var("DRAFT_PR_TRACKING", False)
 
     # Grouping and sorting options
@@ -311,7 +306,6 @@ def get_env_vars(test: bool = False) -> EnvVars:
         non_mentioning_links,
         report_title,
         output_file,
-        rate_limit_bypass,
         draft_pr_tracking,
         hide_pr_statistics,
         hide_items_list,

@@ -259,8 +259,6 @@ def main():  # pragma: no cover
     non_mentioning_links = env_vars.non_mentioning_links
     report_title = env_vars.report_title
     output_file = env_vars.output_file
-    rate_limit_bypass = env_vars.rate_limit_bypass
-
     ghe = env_vars.ghe
     gh_app_id = env_vars.gh_app_id
     gh_app_installation_id = env_vars.gh_app_installation_id
@@ -336,9 +334,7 @@ def main():  # pragma: no cover
             )
             return
     else:
-        issues = search_issues(
-            search_query, github_connection, owners_and_repositories, rate_limit_bypass
-        )
+        issues = search_issues(search_query, github_connection, owners_and_repositories)
         if len(issues) <= 0:
             print("No issues found")
             write_to_markdown(

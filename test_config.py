@@ -85,7 +85,6 @@ class TestGetEnvVars(unittest.TestCase):
             "OUTPUT_FILE",
             "REPORT_TITLE",
             "SEARCH_QUERY",
-            "RATE_LIMIT_BYPASS",
         ]
         for key in env_keys:
             if key in os.environ:
@@ -111,7 +110,6 @@ class TestGetEnvVars(unittest.TestCase):
             "OUTPUT_FILE": "",
             "REPORT_TITLE": "",
             "SEARCH_QUERY": SEARCH_QUERY,
-            "RATE_LIMIT_BYPASS": "false",
         },
         clear=True,
     )
@@ -274,7 +272,6 @@ class TestGetEnvVars(unittest.TestCase):
             "OUTPUT_FILE": "issue_metrics.md",
             "REPORT_TITLE": "Issue Metrics",
             "SEARCH_QUERY": SEARCH_QUERY,
-            "RATE_LIMIT_BYPASS": "true",
             "DRAFT_PR_TRACKING": "True",
         },
     )
@@ -307,7 +304,6 @@ class TestGetEnvVars(unittest.TestCase):
             non_mentioning_links=True,
             report_title="Issue Metrics",
             output_file="issue_metrics.md",
-            rate_limit_bypass=True,
             draft_pr_tracking=True,
             hide_pr_statistics=True,
             hide_items_list=False,
@@ -355,7 +351,6 @@ class TestGetEnvVars(unittest.TestCase):
             non_mentioning_links=False,
             report_title="Issue Metrics",
             output_file="",
-            rate_limit_bypass=False,
             draft_pr_tracking=False,
             hide_pr_statistics=True,
             hide_items_list=False,

@@ -3,14 +3,13 @@
 import sys
 from typing import List
 
-from github import Github, GithubException
+from github import Github, GithubException, RateLimitExceededException
 
 
-def search_issues(  # pylint: disable=unused-argument
+def search_issues(
     search_query: str,
     github_connection: Github,
     owners_and_repositories: List[dict],
-    rate_limit_bypass: bool = False,
 ) -> list:
     """
     Searches for issues/prs/discussions in a GitHub repository that match
@@ -21,8 +20,6 @@ def search_issues(  # pylint: disable=unused-argument
         github_connection (Github): A connection to the GitHub API.
         owners_and_repositories (List[dict]): A list of dictionaries containing
             the owner and repository names.
-        rate_limit_bypass (bool, optional): A flag to bypass the rate limit to be used
-            when working with GitHub server that has rate limiting turned off. Defaults to False.
 
     Returns:
         list: A list of issues that match the search query.
@@ -41,6 +38,12 @@ def search_issues(  # pylint: disable=unused-argument
             print(issue.title)
             issues.append(issue)
 
+    except RateLimitExceededException as e:
+        print(
+            "GitHub API rate limit exceeded; wait for the rate limit to reset and try again."
+        )
+        print_error_messages(e)
+        sys.exit(1)
     except GithubException as e:
         status = e.status if hasattr(e, "status") else None
         if status == 403:

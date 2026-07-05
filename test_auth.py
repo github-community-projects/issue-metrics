@@ -160,22 +160,3 @@ class TestAuthToGithub(unittest.TestCase):
         )
 
         self.assertIsNone(result)
-
-    @patch("auth.Github")
-    @patch("auth.Auth")
-    def test_auth_to_github_invalid_credentials(self, mock_auth, mock_github_cls):
-        """
-        Test the auth_to_github function raises correct ValueError
-        when credentials are present but incorrect.
-        """
-        mock_token = MagicMock()
-        mock_auth.Token.return_value = mock_token
-        mock_github_cls.return_value = None
-        with self.assertRaises(ValueError) as context_manager:
-            auth_to_github("not_a_valid_token", "", "", b"", "", False)
-
-        the_exception = context_manager.exception
-        self.assertEqual(
-            str(the_exception),
-            "Unable to authenticate to GitHub",
-        )

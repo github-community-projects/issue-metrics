@@ -42,8 +42,6 @@ def auth_to_github(
         raise ValueError("GH_TOKEN or the set of [GH_APP_ID, GH_APP_INSTALLATION_ID, \
                 GH_APP_PRIVATE_KEY] environment variables are not set")
 
-    if not github_connection:
-        raise ValueError("Unable to authenticate to GitHub")
     return github_connection
 
 

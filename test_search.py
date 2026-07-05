@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from github import GithubException
+from github import GithubException, RateLimitExceededException
 from search import get_owners_and_repositories, print_error_messages, search_issues
 
 
@@ -19,10 +19,6 @@ class TestSearchIssues(unittest.TestCase):
             Test that search_issues with owner/repo returns the correct issues.
         test_search_issues_with_just_owner_or_org:
             Test that search_issues with just an owner/org returns the correct issues.
-        test_search_issues_with_just_owner_or_org_with_bypass:
-            Test that search_issues with just an owner/org returns the correct issues
-            with rate limit bypass enabled.
-
     """
 
     def test_search_issues_with_owner_and_repository(self):
@@ -56,25 +52,6 @@ class TestSearchIssues(unittest.TestCase):
         org = {"owner": "org1"}
         owners = [org]
         issues = search_issues("is:open", mock_connection, owners)
-        self.assertEqual(issues, mock_issues)
-
-    def test_search_issues_with_just_owner_or_org_with_bypass(self):
-        """Test that search_issues with just an owner/org returns the correct issues."""
-
-        mock_issues = [
-            MagicMock(title="Issue 1"),
-            MagicMock(title="Issue 2"),
-            MagicMock(title="Issue 3"),
-        ]
-
-        mock_connection = MagicMock()
-        mock_connection.search_issues.return_value = mock_issues
-
-        org = {"owner": "org1"}
-        owners = [org]
-        issues = search_issues(
-            "is:open", mock_connection, owners, rate_limit_bypass=True
-        )
         self.assertEqual(issues, mock_issues)
 
 
@@ -150,8 +127,15 @@ class TestSearchCoverageGaps(unittest.TestCase):
                 "is:open",
                 mock_connection,
                 [{"owner": "o", "repository": "r"}],
-                rate_limit_bypass=True,
             )
+
+    def test_rate_limit_exceeded_exits(self):
+        """RateLimitExceededException triggers a clean SystemExit."""
+        self._assert_exception_exits(
+            RateLimitExceededException(
+                403, {"message": "API rate limit exceeded"}, None
+            )
+        )
 
     def test_forbidden_error_exits(self):
         """403 GithubException triggers a clean SystemExit."""
