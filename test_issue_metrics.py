@@ -18,7 +18,6 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, call, patch
 
-import github3
 from issue_metrics import (
     IssueWithMetrics,
     evaluate_markdown_file_size,
@@ -80,34 +79,42 @@ class TestGetPerIssueMetrics(unittest.TestCase):
         """
 
         # Create mock data
+        mock_user1 = MagicMock()
+        mock_user1.login = "alice"
         mock_issue1 = MagicMock(
             title="Issue 1",
             html_url="https://github.com/user/repo/issues/1",
-            user={"login": "alice"},
+            user=mock_user1,
             state="open",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment1 = MagicMock()
         mock_comment1.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
-        mock_issue1.issue.comments.return_value = [mock_comment1]
-        mock_issue1.issue.pull_request_urls = None
+        mock_issue1.get_comments.return_value = [mock_comment1]
+        mock_issue1.pull_request = None
 
+        mock_user2 = MagicMock()
+        mock_user2.login = "bob"
         mock_issue2 = MagicMock(
             title="Issue 2",
             html_url="https://github.com/user/repo/issues/2",
-            user={"login": "bob"},
+            user=mock_user2,
             state="closed",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
-            closed_at="2023-01-04T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            closed_at=datetime.fromisoformat("2023-01-04T00:00:00Z"),
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment2 = MagicMock()
         mock_comment2.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
-        mock_issue2.issue.comments.return_value = [mock_comment2]
-        mock_issue2.issue.pull_request_urls = None
+        mock_issue2.get_comments.return_value = [mock_comment2]
+        mock_issue2.pull_request = None
 
         issues = [
             mock_issue1,
@@ -192,34 +199,43 @@ class TestGetPerIssueMetrics(unittest.TestCase):
         """
 
         # Create mock data
+        mock_user1 = MagicMock()
+        mock_user1.login = "alice"
         mock_issue1 = MagicMock(
             title="Issue 1",
             html_url="https://github.com/user/repo/issues/1",
-            user={"login": "alice"},
+            user=mock_user1,
             state="open",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment1 = MagicMock()
         mock_comment1.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
-        mock_issue1.issue.comments.return_value = [mock_comment1]
-        mock_issue1.issue.pull_request_urls = None
+        mock_issue1.get_comments.return_value = [mock_comment1]
+        mock_issue1.pull_request = None
 
+        mock_user2 = MagicMock()
+        mock_user2.login = "bob"
         mock_issue2 = MagicMock(
             title="Issue 2",
             html_url="https://github.com/user/repo/issues/2",
-            user={"login": "bob"},
+            user=mock_user2,
             state="closed",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
-            closed_at="2023-01-04T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            closed_at=datetime.fromisoformat("2023-01-04T00:00:00Z"),
+            state_reason="completed",
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment2 = MagicMock()
         mock_comment2.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
-        mock_issue2.issue.comments.return_value = [mock_comment2]
-        mock_issue2.issue.pull_request_urls = None
+        mock_issue2.get_comments.return_value = [mock_comment2]
+        mock_issue2.pull_request = None
 
         issues = [
             mock_issue1,
@@ -300,34 +316,42 @@ class TestGetPerIssueMetrics(unittest.TestCase):
         """
 
         # Create mock data
+        mock_user1 = MagicMock()
+        mock_user1.login = "alice"
         mock_issue1 = MagicMock(
             title="Issue 1",
             html_url="https://github.com/user/repo/issues/1",
-            user={"login": "alice"},
+            user=mock_user1,
             state="open",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment1 = MagicMock()
         mock_comment1.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
-        mock_issue1.issue.comments.return_value = [mock_comment1]
-        mock_issue1.issue.pull_request_urls = None
+        mock_issue1.get_comments.return_value = [mock_comment1]
+        mock_issue1.pull_request = None
 
+        mock_user2 = MagicMock()
+        mock_user2.login = "bob"
         mock_issue2 = MagicMock(
             title="Issue 2",
             html_url="https://github.com/user/repo/issues/2",
-            user={"login": "bob"},
+            user=mock_user2,
             state="closed",
             comments=1,
-            created_at="2023-01-01T00:00:00Z",
-            closed_at="2023-01-04T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
+            closed_at=datetime.fromisoformat("2023-01-04T00:00:00Z"),
+            assignee=None,
+            assignees=[],
         )
 
         mock_comment2 = MagicMock()
         mock_comment2.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
-        mock_issue2.issue.comments.return_value = [mock_comment2]
-        mock_issue2.issue.pull_request_urls = None
+        mock_issue2.get_comments.return_value = [mock_comment2]
+        mock_issue2.pull_request = None
 
         issues = [
             mock_issue1,
@@ -389,29 +413,29 @@ class TestGetPerIssueMetrics(unittest.TestCase):
         Test that the function handles TypeError when a pull request
         contains a ghost user (deleted account) gracefully.
         """
-        # Create mock data for a pull request that will cause TypeError on pull_request()
+        # Create mock data for a pull request that will cause TypeError on as_pull_request()
+        mock_user = MagicMock()
+        mock_user.login = "existing_user"
         mock_issue = MagicMock(
             title="PR with Ghost User",
             html_url="https://github.com/user/repo/pull/1",
-            user={"login": "existing_user"},
+            user=mock_user,
             state="open",
             comments=0,
-            created_at="2023-01-01T00:00:00Z",
+            created_at=datetime.fromisoformat("2023-01-01T00:00:00Z"),
             closed_at=None,
+            assignee=None,
+            assignees=[],
         )
 
-        # Mock the issue to have pull_request_urls (indicating it's a PR)
-        mock_issue.issue.pull_request_urls = [
-            "https://api.github.com/repos/user/repo/pulls/1"
-        ]
+        # Mock the issue to have pull_request (indicating it's a PR)
+        mock_issue.pull_request = MagicMock()
 
-        # Make pull_request() raise TypeError (simulating ghost user scenario)
-        mock_issue.issue.pull_request.side_effect = TypeError(
+        # Make as_pull_request() raise TypeError (simulating ghost user scenario)
+        mock_issue.as_pull_request.side_effect = TypeError(
             "'NoneType' object is not subscriptable"
         )
-        mock_issue.issue.comments.return_value = []
-        mock_issue.issue.assignee = None
-        mock_issue.issue.assignees = None
+        mock_issue.get_comments.return_value = []
 
         issues = [mock_issue]
 
@@ -624,34 +648,27 @@ def _make_pr_search_result(
     is_pull_request=True,
     pull_request=None,
 ):
-    """Build a MagicMock that matches github3.search.IssueSearchResult shape.
+    """Build a MagicMock that matches PyGithub Issue shape."""
+    mock_user = MagicMock()
+    mock_user.login = login
 
-    Setting __class__ on the mock makes isinstance(mock,
-    github3.search.IssueSearchResult) return True, which is required for the
-    created_at extraction branch in issue_metrics.py to take the
-    IssueSearchResult path. We avoid spec= because IssueSearchResult does not
-    expose .issue as a class-level attribute.
-    """
+    mock_assignee = MagicMock()
+    mock_assignee.login = login
+
     mock = MagicMock()
-    mock.__class__ = github3.search.IssueSearchResult  # type: ignore
     mock.title = title
     mock.html_url = url
-    mock.user = {"login": login}
+    mock.user = mock_user
     mock.state = state
-    mock.created_at = created_at
-    mock.closed_at = closed_at
+    mock.created_at = datetime.fromisoformat(created_at)
+    mock.closed_at = datetime.fromisoformat(closed_at) if closed_at else None
+    mock.state_reason = state_reason
 
-    mock.issue.as_dict.return_value = {
-        "assignee": {"login": login},
-        "assignees": [{"login": login}],
-    }
-    mock.issue.state = state
-    mock.issue.state_reason = state_reason
-    mock.issue.created_at = datetime.fromisoformat(created_at)
-    mock.issue.pull_request_urls = (
-        ["https://api.github.com/repos/owner/repo/pulls/1"] if is_pull_request else None
-    )
-    mock.issue.pull_request.return_value = pull_request
+    mock.assignee = mock_assignee
+    mock.assignees = [mock_assignee]
+
+    mock.pull_request = MagicMock() if is_pull_request else None
+    mock.as_pull_request.return_value = pull_request
     return mock
 
 
@@ -773,7 +790,7 @@ class TestIssueMetricsExtraBranches(unittest.TestCase):
         self.assertIn("as", metrics[0].status)
         # Open status uses just the state value.
         self.assertEqual(metrics[1].status, "open")
-        # created_at is populated from issue.issue.created_at.
+        # created_at is populated from issue.created_at.
         self.assertIsNotNone(metrics[0].created_at)
 
     @patch.dict(

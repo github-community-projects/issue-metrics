@@ -16,13 +16,13 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_basic(self):
         """Test that the function calculates correct review time."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         mock_review = MagicMock()
         mock_review.submitted_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
 
         mock_pull_request = MagicMock()
-        mock_pull_request.reviews.return_value = [mock_review]
+        mock_pull_request.get_reviews.return_value = [mock_review]
 
         result = measure_time_to_first_review(mock_issue, mock_pull_request, None, [])
         expected = timedelta(days=1)
@@ -31,10 +31,10 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_no_reviews(self):
         """Test that function returns None if there are no reviews."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         mock_pull_request = MagicMock()
-        mock_pull_request.reviews.return_value = []
+        mock_pull_request.get_reviews.return_value = []
 
         result = measure_time_to_first_review(mock_issue, mock_pull_request, None, [])
         self.assertEqual(result, None)
@@ -42,7 +42,7 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_ignore_pending(self):
         """Test that pending reviews are ignored."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         pending_review = MagicMock()
         pending_review.submitted_at = None
@@ -51,7 +51,7 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
         valid_review.submitted_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
 
         mock_pull_request = MagicMock()
-        mock_pull_request.reviews.return_value = [pending_review, valid_review]
+        mock_pull_request.get_reviews.return_value = [pending_review, valid_review]
 
         result = measure_time_to_first_review(mock_issue, mock_pull_request, None, [])
         expected = timedelta(days=2)
@@ -81,14 +81,14 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_ready_for_review_path(self):
         """Test the ready_for_review_at path (Start time logic)."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
         ready_at = datetime.fromisoformat("2023-01-01T12:00:00Z")
 
         mock_review = MagicMock()
         mock_review.submitted_at = datetime.fromisoformat("2023-01-01T13:00:00Z")
 
         mock_pr = MagicMock()
-        mock_pr.reviews.return_value = [mock_review]
+        mock_pr.get_reviews.return_value = [mock_review]
 
         result = measure_time_to_first_review(mock_issue, mock_pr, ready_at, [])
         self.assertEqual(result, timedelta(hours=1))
@@ -96,7 +96,7 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_ignore_users(self):
         """Test filtering out a matching reviewer from ignore_users."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T10:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T10:00:00Z")
 
         bad_review = MagicMock()
         bad_review.user.login = "bot-user"
@@ -107,7 +107,7 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
         good_review.submitted_at = datetime.fromisoformat("2023-01-01T12:00:00Z")
 
         mock_pr = MagicMock()
-        mock_pr.reviews.return_value = [bad_review, good_review]
+        mock_pr.get_reviews.return_value = [bad_review, good_review]
 
         result = measure_time_to_first_review(mock_issue, mock_pr, None, ["bot-user"])
         self.assertEqual(result, timedelta(hours=2))
@@ -115,10 +115,10 @@ class TestMeasureTimeToFirstReview(unittest.TestCase):
     def test_measure_time_to_first_review_type_error_path(self):
         """Test the except TypeError error handling path."""
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         mock_pr = MagicMock()
-        mock_pr.reviews.side_effect = TypeError("ghost user")
+        mock_pr.get_reviews.side_effect = TypeError("ghost user")
 
         result = measure_time_to_first_review(mock_issue, mock_pr, None, [])
         self.assertIsNone(result)
@@ -137,13 +137,13 @@ class TestTimeToFirstReviewEdgeCases(unittest.TestCase):
         """ignore_users defaults to an empty list when omitted."""
 
         mock_issue = MagicMock()
-        mock_issue.created_at = "2023-01-01T00:00:00Z"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         mock_review = MagicMock()
         mock_review.submitted_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
 
         mock_pr = MagicMock()
-        mock_pr.reviews.return_value = [mock_review]
+        mock_pr.get_reviews.return_value = [mock_review]
 
         # Omit ignore_users to exercise the default-None branch.
         result = measure_time_to_first_review(mock_issue, mock_pr)

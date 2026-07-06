@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "GitHub Action that measures metrics for GitHub issues, pull requests, and discussions."
 requires-python = ">=3.11"
 dependencies = [
-    "github3-py==4.0.1",
+    "PyGithub==2.9.1",
     "numpy==2.4.6",
     "python-dotenv==1.2.2",
     "pytz==2026.2",

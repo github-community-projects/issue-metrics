@@ -20,9 +20,9 @@ Open questions:
 
 Functions:
     collect_response_usernames(
-        issue: Union[github3.issues.Issue, None],
+        issue: Union[github.Issue.Issue, None],
         discussion: Union[dict, None],
-        pull_request: Union[github3.pulls.PullRequest, None],
+        pull_request: Union[github.PullRequest.PullRequest, None],
         max_comments_to_evaluate,
     ) -> ____________
          Collect the number of responses per username for single item. Take only
@@ -38,14 +38,15 @@ from collections import Counter
 from datetime import datetime
 from typing import Dict, List, Union
 
-import github3
 from classes import IssueWithMetrics
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 
 
 def count_comments_per_user(
-    issue: Union[github3.issues.Issue, None],  # type: ignore
+    issue: Union[Issue, None],
     discussion: Union[dict, None] = None,
-    pull_request: Union[github3.pulls.PullRequest, None] = None,
+    pull_request: Union[PullRequest, None] = None,
     ready_for_review_at: Union[datetime, None] = None,
     ignore_users: List[str] | None = None,
     max_comments_to_eval=20,
@@ -54,8 +55,8 @@ def count_comments_per_user(
     """Count the number of times a user was seen commenting on a single item.
 
     Args:
-        issue (Union[github3.issues.Issue, None]): A GitHub issue.
-        pull_request (Union[github3.pulls.PullRequest, None]): A GitHub pull
+        issue (Union[Issue, None]): A GitHub issue.
+        pull_request (Union[PullRequest, None]): A GitHub pull
         request.
         ignore_users (List[str]): A list of GitHub usernames to ignore.
         max_comments_to_eval: Maximum number of comments per item to look at.
@@ -72,12 +73,14 @@ def count_comments_per_user(
 
     # Get the first comments
     if issue:
-        comments = issue.issue.comments(
-            number=max_comments_to_eval, sort="created", direction="asc"
-        )  # type: ignore
+        comments = issue.get_comments()
+        comment_count = 0
         for comment in comments:
+            if comment_count >= max_comments_to_eval:
+                break
+            comment_count += 1
             if ignore_comment(
-                issue.issue.user,
+                issue.user,
                 comment.user,
                 ignore_users,
                 comment.created_at,
@@ -94,11 +97,14 @@ def count_comments_per_user(
         # Check if the issue is actually a pull request
         # so we may also get the first review comment time
         if pull_request:
-            review_comments = pull_request.reviews(number=max_comments_to_eval)
-            # type: ignore
+            review_comments = pull_request.get_reviews()
+            review_count = 0
             for review_comment in review_comments:
+                if review_count >= max_comments_to_eval:
+                    break
+                review_count += 1
                 if ignore_comment(
-                    issue.issue.user,
+                    issue.user,
                     review_comment.user,
                     ignore_users,
                     review_comment.submitted_at,
@@ -138,13 +144,16 @@ def count_comments_per_user(
 
 
 def ignore_comment(
-    issue_user: github3.users.User,
-    comment_user: github3.users.User,
+    issue_user,
+    comment_user,
     ignore_users: List[str],
     comment_created_at: datetime,
     ready_for_review_at: Union[datetime, None],
 ) -> bool:
     """Check if a comment should be ignored."""
+    # PyGithub returns None for ghost (deleted) users
+    if comment_user is None:
+        return True
     return bool(
         # ignore comments by IGNORE_USERS
         comment_user.login in ignore_users

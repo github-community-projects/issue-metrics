@@ -4,7 +4,6 @@ import unittest
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
-import github3
 import pytz
 from time_in_draft import get_stats_time_in_draft, measure_time_in_draft
 
@@ -19,14 +18,13 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         Setup common test data and mocks.
         """
         self.issue = MagicMock()
-        self.issue.issue = MagicMock(spec=github3.issues.Issue)
-        self.issue.issue.state = "open"
+        self.issue.state = "open"
 
     def test_time_in_draft_with_ready_for_review(self):
         """
         Test measure_time_in_draft with one draft and review interval.
         """
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
@@ -44,7 +42,7 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         """
         Test measure_time_in_draft when ready_for_review_at is not provided and issue is still open.
         """
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
@@ -61,7 +59,7 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         """
         Test measure_time_in_draft with multiple draft intervals.
         """
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
@@ -87,7 +85,7 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         """
         Test measure_time_in_draft with an ongoing draft interval.
         """
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
@@ -105,7 +103,8 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         """
         Test measure_time_in_draft with no draft-related events.
         """
-        self.issue.issue.events.return_value = []
+        self.issue.get_events.return_value = []
+        self.issue.as_pull_request.return_value.draft = False
         result = measure_time_in_draft(self.issue)
         self.assertIsNone(
             result, "The result should be None when there are no draft events."
@@ -115,13 +114,13 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         """
         Test measure_time_in_draft for a closed issue with an ongoing draft and ready_for_review_at is not provided.
         """
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
             ),
         ]
-        self.issue.issue.state = "closed"
+        self.issue.state = "closed"
         result = measure_time_in_draft(self.issue)
         self.assertIsNone(
             result,
@@ -133,10 +132,10 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         Test measure_time_in_draft with a PR initially created as draft.
         """
         # Set up issue created_at time
-        self.issue.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
+        self.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
 
         # Mock events with only ready_for_review (no convert_to_draft)
-        self.issue.issue.events.return_value = [
+        self.issue.get_events.return_value = [
             MagicMock(
                 event="ready_for_review",
                 created_at=datetime(2021, 1, 3, tzinfo=pytz.utc),
@@ -159,10 +158,10 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         Test measure_time_in_draft with a PR initially created as draft and still in draft.
         """
         # Set up issue created_at time
-        self.issue.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
+        self.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
 
         # Mock events with no ready_for_review events (still draft)
-        self.issue.issue.events.return_value = []
+        self.issue.get_events.return_value = []
 
         # Mock pull request object indicating it's currently draft
         mock_pull_request = MagicMock()
@@ -187,10 +186,9 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         This test reproduces the original bug scenario.
         """
         # This simulates the actual issue structure passed from get_per_issue_metrics
-        issue_search_result = MagicMock()
-        issue_search_result.issue = MagicMock(spec=github3.issues.Issue)
-        issue_search_result.issue.state = "open"
-        issue_search_result.issue.events.return_value = [
+        issue = MagicMock()
+        issue.state = "open"
+        issue.get_events.return_value = [
             MagicMock(
                 event="convert_to_draft",
                 created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
@@ -200,18 +198,18 @@ class TestMeasureTimeInDraft(unittest.TestCase):
         # This should NOT raise AttributeError: events
         with unittest.mock.patch("time_in_draft.datetime") as mock_datetime:
             mock_datetime.now.return_value = datetime(2021, 1, 4, tzinfo=pytz.utc)
-            result = measure_time_in_draft(issue_search_result)
+            result = measure_time_in_draft(issue)
             expected = timedelta(days=3)
             self.assertEqual(result, expected, "The time in draft should be 3 days.")
 
     def test_time_in_draft_with_iterator_events(self):
         """
         Test measure_time_in_draft with events() returning an iterator instead of a list.
-        This test ensures the function works correctly when events() returns an iterator
+        This test ensures the function works correctly when get_events() returns an iterator
         (as it does in the real GitHub API), which can only be consumed once.
         """
         # Set up issue created_at time
-        self.issue.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
+        self.issue.created_at = datetime(2021, 1, 1, tzinfo=pytz.utc)
 
         # Create an iterator of events (simulating real GitHub API behavior)
         def events_iterator():
@@ -228,15 +226,36 @@ class TestMeasureTimeInDraft(unittest.TestCase):
                 ]
             )
 
-        self.issue.issue.events = events_iterator
+        self.issue.get_events = events_iterator
 
         result = measure_time_in_draft(self.issue)
         expected = timedelta(days=2)
         self.assertEqual(
             result,
             expected,
-            "The time in draft should be 2 days when events() returns an iterator.",
+            "The time in draft should be 2 days when get_events() returns an iterator.",
         )
+
+    def test_time_in_draft_attribute_error_in_pr_detection(self):
+        """
+        Test measure_time_in_draft when as_pull_request raises AttributeError.
+        Falls back to event-based logic only.
+        """
+        self.issue.get_events.return_value = [
+            MagicMock(
+                event="convert_to_draft",
+                created_at=datetime(2021, 1, 1, tzinfo=pytz.utc),
+            ),
+            MagicMock(
+                event="ready_for_review",
+                created_at=datetime(2021, 1, 3, tzinfo=pytz.utc),
+            ),
+        ]
+        self.issue.as_pull_request.side_effect = AttributeError("no PR")
+
+        result = measure_time_in_draft(self.issue)
+        expected = timedelta(days=2)
+        self.assertEqual(result, expected)
 
 
 class TestGetStatsTimeInDraft(unittest.TestCase):

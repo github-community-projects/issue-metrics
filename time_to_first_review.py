@@ -3,15 +3,16 @@
 from datetime import datetime, timedelta
 from typing import List, Union
 
-import github3
 import numpy
 from classes import IssueWithMetrics
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 from time_to_first_response import ignore_comment
 
 
 def measure_time_to_first_review(
-    issue: Union[github3.issues.Issue, None],
-    pull_request: Union[github3.pulls.PullRequest, None],
+    issue: Union[Issue, None],
+    pull_request: Union[PullRequest, None],
     ready_for_review_at: Union[datetime, None] = None,
     ignore_users: Union[List[str], None] = None,
 ) -> Union[timedelta, None]:
@@ -26,10 +27,10 @@ def measure_time_to_first_review(
     first_review_time = None
 
     try:
-        reviews = pull_request.reviews(number=50)
+        reviews = pull_request.get_reviews()
         for review in reviews:
             if ignore_comment(
-                issue.issue.user,
+                issue.user,
                 review.user,
                 ignore_users,
                 review.submitted_at,
@@ -52,7 +53,7 @@ def measure_time_to_first_review(
     if ready_for_review_at:
         pr_created_time = ready_for_review_at
     else:
-        pr_created_time = datetime.fromisoformat(issue.created_at)
+        pr_created_time = issue.created_at
 
     return first_review_time - pr_created_time
 

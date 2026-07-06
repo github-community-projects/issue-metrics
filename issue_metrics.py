@@ -6,7 +6,7 @@ the average time to first response and time to close and writes the issues with
 their metrics to a markdown file.
 
 Functions:
-    get_per_issue_metrics(issues: Union[List[dict], List[github3.issues.Issue]],
+    get_per_issue_metrics(issues: Union[List[dict], List[github.Issue.Issue]],
         discussions: bool = False), labels: Union[List[str], None] = None,
         ignore_users: List[str] = [] -> tuple[List, int, int]:
         Calculate the metrics for each issue in a list of GitHub issues.
@@ -19,12 +19,11 @@ import shutil
 from pathlib import Path
 from typing import List, Union
 
-import github3
-import github3.structs
 from auth import auth_to_github, get_github_app_installation_token
 from classes import IssueWithMetrics
 from config import EnvVars, get_env_vars
 from discussions import get_discussions
+from github.Issue import Issue
 from json_writer import write_to_json
 from labels import get_label_metrics, get_stats_time_in_labels
 from markdown_helpers import markdown_too_large_for_issue_body, split_markdown_file
@@ -48,7 +47,7 @@ from time_to_ready_for_review import get_time_to_ready_for_review
 
 
 def get_per_issue_metrics(
-    issues: Union[List[dict], List[github3.search.IssueSearchResult]],  # type: ignore
+    issues: Union[List[dict], List[Issue]],
     env_vars: EnvVars,
     discussions: bool = False,
     labels: Union[List[str], None] = None,
@@ -60,7 +59,7 @@ def get_per_issue_metrics(
     Calculate the metrics for each issue/pr/discussion in a list provided.
 
     Args:
-        issues (Union[List[dict], List[github3.search.IssueSearchResult]]): A list of
+        issues (Union[List[dict], List[Issue]]): A list of
             GitHub issues or discussions.
         discussions (bool, optional): Whether the issues are discussions or not.
             Defaults to False.
@@ -79,7 +78,7 @@ def get_per_issue_metrics(
     num_issues_closed = 0
 
     for issue in issues:
-        if discussions:
+        if discussions and isinstance(issue, dict):
             issue_with_metrics = IssueWithMetrics(
                 issue["title"],
                 issue["url"],
@@ -95,7 +94,9 @@ def get_per_issue_metrics(
             issue_with_metrics.assignees = []
             if env_vars.hide_time_to_first_response is False:
                 issue_with_metrics.time_to_first_response = (
-                    measure_time_to_first_response(None, issue, ignore_users)
+                    measure_time_to_first_response(
+                        None, issue, ignore_users=ignore_users
+                    )
                 )
             if env_vars.enable_mentor_count:
                 issue_with_metrics.mentor_activity = count_comments_per_user(
@@ -117,35 +118,34 @@ def get_per_issue_metrics(
                     )
             else:
                 num_issues_open += 1
-        else:
-            if ignore_users and issue.user["login"] in ignore_users:  # type: ignore
+        elif not isinstance(issue, dict):
+            if ignore_users and issue.user.login in ignore_users:
                 continue
 
             issue_with_metrics = IssueWithMetrics(
-                title=issue.title,  # type: ignore
-                html_url=issue.html_url,  # type: ignore
-                author=issue.user["login"],  # type: ignore
+                title=issue.title,
+                html_url=issue.html_url,
+                author=issue.user.login,
             )
 
             # Extract assignee information from the issue
-            issue_dict = issue.issue.as_dict()  # type: ignore
             assignee = None
             assignees = []
 
-            if issue_dict.get("assignee"):
-                assignee = issue_dict["assignee"]["login"]
+            if issue.assignee:
+                assignee = issue.assignee.login
 
-            if issue_dict.get("assignees"):
-                assignees = [a["login"] for a in issue_dict["assignees"]]
+            if issue.assignees:
+                assignees = [a.login for a in issue.assignees]
 
             issue_with_metrics.assignee = assignee
             issue_with_metrics.assignees = assignees
 
             # Check if issue is actually a pull request
             pull_request, ready_for_review_at = None, None
-            if issue.issue.pull_request_urls:  # type: ignore
+            if issue.pull_request:
                 try:
-                    pull_request = issue.issue.pull_request()  # type: ignore
+                    pull_request = issue.as_pull_request()
                     ready_for_review_at = get_time_to_ready_for_review(
                         issue, pull_request
                     )
@@ -188,7 +188,7 @@ def get_per_issue_metrics(
                 )
             if labels and env_vars.hide_label_metrics is False:
                 issue_with_metrics.label_metrics = get_label_metrics(issue, labels)
-            if issue.state == "closed":  # type: ignore
+            if issue.state == "closed":
                 num_issues_closed += 1
                 if not env_vars.hide_time_to_close:
                     if pull_request:
@@ -200,16 +200,16 @@ def get_per_issue_metrics(
                             issue, None
                         )
                 if not env_vars.hide_status:
-                    issue_with_metrics.status = f"{issue.issue.state} as {issue.issue.state_reason}"  # type: ignore
-            elif issue.state == "open":  # type: ignore
+                    issue_with_metrics.status = f"{issue.state} as {issue.state_reason}"
+            elif issue.state == "open":
                 num_issues_open += 1
                 if not env_vars.hide_status:
-                    issue_with_metrics.status = f"{issue.issue.state}"  # type: ignore
+                    issue_with_metrics.status = f"{issue.state}"
         if not env_vars.hide_created_at:
-            if isinstance(issue, github3.search.IssueSearchResult):  # type: ignore
-                issue_with_metrics.created_at = issue.issue.created_at  # type: ignore
-            elif isinstance(issue, dict):  # type: ignore
-                issue_with_metrics.created_at = issue["createdAt"]  # type: ignore
+            if isinstance(issue, dict):
+                issue_with_metrics.created_at = issue["createdAt"]
+            else:
+                issue_with_metrics.created_at = issue.created_at
         issues_with_metrics.append(issue_with_metrics)
 
     return issues_with_metrics, num_issues_open, num_issues_closed
@@ -259,8 +259,6 @@ def main():  # pragma: no cover
     non_mentioning_links = env_vars.non_mentioning_links
     report_title = env_vars.report_title
     output_file = env_vars.output_file
-    rate_limit_bypass = env_vars.rate_limit_bypass
-
     ghe = env_vars.ghe
     gh_app_id = env_vars.gh_app_id
     gh_app_installation_id = env_vars.gh_app_installation_id
@@ -336,9 +334,7 @@ def main():  # pragma: no cover
             )
             return
     else:
-        issues = search_issues(
-            search_query, github_connection, owners_and_repositories, rate_limit_bypass
-        )
+        issues = search_issues(search_query, github_connection, owners_and_repositories)
         if len(issues) <= 0:
             print("No issues found")
             write_to_markdown(

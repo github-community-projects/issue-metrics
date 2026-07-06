@@ -6,8 +6,8 @@ marked as ready for review, if it was formerly in draft mode.
 
 Functions:
     get_time_to_ready_for_review(
-        issue: github3.issues.Issue,
-        pull_request: github3.pulls.PullRequest
+        issue: github.Issue.Issue,
+        pull_request: github.PullRequest.PullRequest
     ) -> Union[datetime, None]:
         If a pull request was formerly a draft, get the time it was marked as
         ready for review.
@@ -17,19 +17,20 @@ Functions:
 from datetime import datetime
 from typing import Union
 
-import github3
+from github.Issue import Issue
+from github.PullRequest import PullRequest
 
 
 def get_time_to_ready_for_review(
-    issue: github3.issues.Issue,
-    pull_request: github3.pulls.PullRequest,
+    issue: Issue,
+    pull_request: PullRequest,
 ) -> Union[datetime, None]:
     """If a pull request was formerly a draft, get the time it was marked as ready
     for review
 
     Args:
-        issue (github3.issues.Issue): A GitHub issue.
-        pull_request (github3.pulls.PullRequest): A GitHub pull request.
+        issue (Issue): A GitHub issue.
+        pull_request (PullRequest): A GitHub pull request.
 
     Returns:
         Union[datetime, None]: The time the pull request was marked as ready for review
@@ -37,7 +38,7 @@ def get_time_to_ready_for_review(
     if pull_request.draft:
         return None
 
-    events = issue.issue.events(number=50)
+    events = issue.get_events()
     try:
         for event in events:
             if event.event == "ready_for_review":

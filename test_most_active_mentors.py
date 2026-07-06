@@ -33,19 +33,19 @@ class TestCountCommentsPerUser(unittest.TestCase):
         # Set up the mock GitHub issues
         mock_issue1 = MagicMock()
         mock_issue1.comments = 2
-        mock_issue1.issue.user.login = "issue_owner"
-        mock_issue1.created_at = "2023-01-01T00:00:00Z"
+        mock_issue1.user.login = "issue_owner"
+        mock_issue1.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         # Set up 21 mock GitHub issue comments - only 20 should be counted
-        mock_issue1.issue.comments.return_value = []
+        comments_list = []
         for i in range(22):
             mock_comment1 = MagicMock()
             mock_comment1.user.login = "very_active_user"
             mock_comment1.created_at = datetime.fromisoformat(
                 f"2023-01-02T{i:02d}:00:00Z"
             )
-            # pylint: disable=maybe-no-member
-            mock_issue1.issue.comments.return_value.append(mock_comment1)
+            comments_list.append(mock_comment1)
+        mock_issue1.get_comments.return_value = comments_list
 
         # Call the function
         result = count_comments_per_user(mock_issue1)
@@ -59,27 +59,26 @@ class TestCountCommentsPerUser(unittest.TestCase):
         # Set up the mock GitHub issues
         mock_issue1 = MagicMock()
         mock_issue1.comments = 2
-        mock_issue1.issue.user.login = "issue_owner"
-        mock_issue1.created_at = "2023-01-01T00:00:00Z"
+        mock_issue1.user.login = "issue_owner"
+        mock_issue1.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
 
         # Set up mock GitHub issue comments by several users
-        mock_issue1.issue.comments.return_value = []
+        comments_list = []
         for i in range(5):
             mock_comment1 = MagicMock()
             mock_comment1.user.login = "very_active_user"
             mock_comment1.created_at = datetime.fromisoformat(
                 f"2023-01-02T{i:02d}:00:00Z"
             )
-            # pylint: disable=maybe-no-member
-            mock_issue1.issue.comments.return_value.append(mock_comment1)
+            comments_list.append(mock_comment1)
         for i in range(5):
             mock_comment1 = MagicMock()
             mock_comment1.user.login = "very_active_user_ignored"
             mock_comment1.created_at = datetime.fromisoformat(
                 f"2023-01-02T{i:02d}:00:00Z"
             )
-            # pylint: disable=maybe-no-member
-            mock_issue1.issue.comments.return_value.append(mock_comment1)
+            comments_list.append(mock_comment1)
+        mock_issue1.get_comments.return_value = comments_list
 
         # Call the function
         result = count_comments_per_user(
@@ -121,13 +120,37 @@ class TestCountCommentsPerUser(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
 
+class TestGhostUserHandling(unittest.TestCase):
+    """Covers ghost (deleted) user handling in ignore_comment."""
+
+    def test_ghost_user_comment_is_ignored(self):
+        """A comment with user=None (ghost/deleted account) is skipped."""
+
+        mock_issue = MagicMock()
+        mock_issue.user.login = "owner"
+
+        ghost_comment = MagicMock()
+        ghost_comment.user = None
+        ghost_comment.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
+
+        real_comment = MagicMock()
+        real_comment.user.login = "mentor"
+        real_comment.user.type = "User"
+        real_comment.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
+
+        mock_issue.get_comments.return_value = [ghost_comment, real_comment]
+
+        result = count_comments_per_user(mock_issue)
+        self.assertEqual(result, {"mentor": 1})
+
+
 class TestMostActiveMentorsExtraBranches(unittest.TestCase):
     """Covers most_active_mentors review-comments path."""
 
     def _make_issue(self, owner_login="issue_owner"):
         mock_issue = MagicMock()
-        mock_issue.issue.user.login = owner_login
-        mock_issue.issue.comments.return_value = []
+        mock_issue.user.login = owner_login
+        mock_issue.get_comments.return_value = []
         return mock_issue
 
     def test_count_comments_per_user_with_pr_reviews(self):
@@ -153,7 +176,28 @@ class TestMostActiveMentorsExtraBranches(unittest.TestCase):
         bot_review.submitted_at = datetime.fromisoformat("2023-01-04T00:00:00Z")
 
         mock_pr = MagicMock()
-        mock_pr.reviews.return_value = [review_a, review_b, bot_review]
+        mock_pr.get_reviews.return_value = [review_a, review_b, bot_review]
 
         result = count_comments_per_user(mock_issue, pull_request=mock_pr)
         self.assertEqual(result, {"reviewer": 2})
+
+    def test_count_comments_per_user_review_limit(self):
+        """Reviews beyond max_comments_to_eval are not counted."""
+
+        mock_issue = self._make_issue()
+
+        reviews = []
+        for i in range(25):
+            r = MagicMock()
+            r.user.login = "reviewer"
+            r.user.type = "User"
+            r.submitted_at = datetime.fromisoformat(f"2023-01-{i+1:02d}T00:00:00Z")
+            reviews.append(r)
+
+        mock_pr = MagicMock()
+        mock_pr.get_reviews.return_value = reviews
+
+        result = count_comments_per_user(
+            mock_issue, pull_request=mock_pr, max_comments_to_eval=5
+        )
+        self.assertEqual(result, {"reviewer": 5})

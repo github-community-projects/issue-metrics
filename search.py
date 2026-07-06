@@ -1,123 +1,95 @@
 """A module to search for issues in a GitHub repository."""
 
 import sys
-from time import sleep
 from typing import List
 
-import github3
-import github3.structs
+from github import Github, GithubException, RateLimitExceededException
 
 
 def search_issues(
     search_query: str,
-    github_connection: github3.GitHub,
+    github_connection: Github,
     owners_and_repositories: List[dict],
-    rate_limit_bypass: bool = False,
-) -> List[github3.search.IssueSearchResult]:  # type: ignore
+) -> list:
     """
     Searches for issues/prs/discussions in a GitHub repository that match
     the given search query and handles errors related to GitHub API responses.
 
     Args:
         search_query (str): The search query to use for finding issues/prs/discussions.
-        github_connection (github3.GitHub): A connection to the GitHub API.
+        github_connection (Github): A connection to the GitHub API.
         owners_and_repositories (List[dict]): A list of dictionaries containing
             the owner and repository names.
-        rate_limit_bypass (bool, optional): A flag to bypass the rate limit to be used
-            when working with GitHub server that has rate limiting turned off. Defaults to False.
 
     Returns:
-        List[github3.search.IssueSearchResult]: A list of issues that match the search query.
+        list: A list of issues that match the search query.
     """
-
-    # Rate Limit Handling: API only allows 30 requests per minute
-    def wait_for_api_refresh(
-        iterator: github3.structs.SearchIterator, rate_limit_bypass: bool = False
-    ):
-        # If the rate limit bypass is enabled, don't wait for the API to refresh
-        if rate_limit_bypass:
-            return
-
-        max_retries = 5
-        retry_count = 0
-        sleep_time = 70
-
-        while iterator.ratelimit_remaining < 5:
-            if retry_count >= max_retries:
-                raise RuntimeError("Exceeded maximum retries for API rate limit")
-
-            print(
-                f"GitHub API Rate Limit Low, waiting {sleep_time} seconds to refresh."
-            )
-            sleep(sleep_time)
-
-            # Exponentially increase the sleep time for the next retry
-            sleep_time *= 2
-            retry_count += 1
-
-    issues_per_page = 100
-
-    print("Searching for issues...")
-    issues_iterator = github_connection.search_issues(
-        search_query, per_page=issues_per_page
-    )
-    wait_for_api_refresh(issues_iterator, rate_limit_bypass)
-
-    issues = []
     repos_and_owners_string = ""
     for item in owners_and_repositories:
         repos_and_owners_string += (
             f"{item.get('owner', '')}/{item.get('repository', '')} "
         )
 
-    # Print the issue titles and add them to the list of issues
+    print("Searching for issues...")
     try:
-        for idx, issue in enumerate(issues_iterator, 1):
-            print(issue.title)  # type: ignore
+        issues = []
+        search_results = github_connection.search_issues(search_query, per_page=100)
+        for issue in search_results:
+            print(issue.title)
             issues.append(issue)
 
-            # requests are sent once per page of issues
-            if idx % issues_per_page == 0:
-                wait_for_api_refresh(issues_iterator, rate_limit_bypass)
-
-    except github3.exceptions.ForbiddenError as e:
-        print(f"You do not have permission to view a repository \
-from: '{repos_and_owners_string}'; Check your API Token.")
-        print_error_messages(e)
-        sys.exit(1)
-    except github3.exceptions.NotFoundError as e:
-        print(f"The repository could not be found; \
-Check the repository owner and names: '{repos_and_owners_string}")
-        print_error_messages(e)
-        sys.exit(1)
-    except github3.exceptions.ConnectionError as e:
+    except RateLimitExceededException as e:
         print(
-            "There was a connection error; Check your internet connection or API Token."
+            "GitHub API rate limit exceeded; wait for the rate limit to reset and try again."
         )
         print_error_messages(e)
         sys.exit(1)
-    except github3.exceptions.AuthenticationFailed as e:
-        print("Authentication failed; Check your API Token.")
-        print_error_messages(e)
-        sys.exit(1)
-    except github3.exceptions.UnprocessableEntity as e:
-        print("The search query is invalid; Check the search query.")
-        print_error_messages(e)
+    except GithubException as e:
+        status = e.status if hasattr(e, "status") else None
+        if status == 403:
+            print(f"You do not have permission to view a repository \
+from: '{repos_and_owners_string}'; Check your API Token.")
+            print_error_messages(e)
+            sys.exit(1)
+        elif status == 404:
+            print(f"The repository could not be found; \
+Check the repository owner and names: '{repos_and_owners_string}")
+            print_error_messages(e)
+            sys.exit(1)
+        elif status == 401:
+            print("Authentication failed; Check your API Token.")
+            print_error_messages(e)
+            sys.exit(1)
+        elif status == 422:
+            print("The search query is invalid; Check the search query.")
+            print_error_messages(e)
+            sys.exit(1)
+        else:
+            print(f"An error occurred: {e}")
+            print_error_messages(e)
+            sys.exit(1)
+    except (ConnectionError, OSError) as e:
+        print(
+            "There was a connection error; Check your internet connection or API Token."
+        )
+        print(f"Error: {e}")
         sys.exit(1)
 
     return issues
 
 
-def print_error_messages(error: github3.exceptions):
+def print_error_messages(error: GithubException):
     """Prints the error messages from the GitHub API response.
 
     Args:
-        Error (github3.exceptions): The error object from the GitHub API response.
+        Error (GithubException): The error object from the GitHub API response.
 
     """
-    if hasattr(error, "errors"):
-        for e in error.errors:
-            print(f"Error: {e.get('message')}")
+    if hasattr(error, "data") and isinstance(error.data, dict):
+        errors = error.data.get("errors", [])
+        for e in errors:
+            if isinstance(e, dict):
+                print(f"Error: {e.get('message')}")
 
 
 def get_owners_and_repositories(
