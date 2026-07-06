@@ -464,6 +464,25 @@ class TestTimeToFirstResponseEdgeCases(unittest.TestCase):
         result = measure_time_to_first_response(mock_issue, None, mock_pr)
         self.assertIsNone(result)
 
+    def test_ghost_user_comment_is_ignored(self):
+        """A comment with user=None (ghost/deleted account) is skipped."""
+
+        mock_issue = MagicMock()
+        mock_issue.user.login = "owner"
+        mock_issue.created_at = datetime.fromisoformat("2023-01-01T00:00:00Z")
+
+        ghost_comment = MagicMock()
+        ghost_comment.user = None
+        ghost_comment.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
+
+        real_comment = MagicMock()
+        real_comment.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
+
+        mock_issue.get_comments.return_value = [ghost_comment, real_comment]
+
+        result = measure_time_to_first_response(mock_issue, None)
+        self.assertEqual(result, timedelta(days=2))
+
     def test_returns_none_when_no_issue_and_no_discussion(self):
         """Final return None fallback when neither input is provided."""
 

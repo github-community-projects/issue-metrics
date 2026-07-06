@@ -120,6 +120,30 @@ class TestCountCommentsPerUser(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
 
+class TestGhostUserHandling(unittest.TestCase):
+    """Covers ghost (deleted) user handling in ignore_comment."""
+
+    def test_ghost_user_comment_is_ignored(self):
+        """A comment with user=None (ghost/deleted account) is skipped."""
+
+        mock_issue = MagicMock()
+        mock_issue.user.login = "owner"
+
+        ghost_comment = MagicMock()
+        ghost_comment.user = None
+        ghost_comment.created_at = datetime.fromisoformat("2023-01-02T00:00:00Z")
+
+        real_comment = MagicMock()
+        real_comment.user.login = "mentor"
+        real_comment.user.type = "User"
+        real_comment.created_at = datetime.fromisoformat("2023-01-03T00:00:00Z")
+
+        mock_issue.get_comments.return_value = [ghost_comment, real_comment]
+
+        result = count_comments_per_user(mock_issue)
+        self.assertEqual(result, {"mentor": 1})
+
+
 class TestMostActiveMentorsExtraBranches(unittest.TestCase):
     """Covers most_active_mentors review-comments path."""
 

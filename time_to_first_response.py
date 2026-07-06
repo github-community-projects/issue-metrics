@@ -129,6 +129,10 @@ def ignore_comment(
 ) -> bool:
     """Check if a comment should be ignored."""
 
+    # PyGithub returns None for ghost (deleted) users
+    if comment_user is None:
+        return True
+
     user_is_ignored: bool = comment_user.login in ignore_users
     user_is_a_bot: bool = str(comment_user.type.lower()) == "bot"
     user_is_issue_creator: bool = str(comment_user.login) == str(issue_user.login)

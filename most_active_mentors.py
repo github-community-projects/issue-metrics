@@ -151,6 +151,9 @@ def ignore_comment(
     ready_for_review_at: Union[datetime, None],
 ) -> bool:
     """Check if a comment should be ignored."""
+    # PyGithub returns None for ghost (deleted) users
+    if comment_user is None:
+        return True
     return bool(
         # ignore comments by IGNORE_USERS
         comment_user.login in ignore_users
