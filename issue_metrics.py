@@ -307,7 +307,7 @@ def main():  # pragma: no cover
             raise ValueError(
                 "The search query for discussions cannot include labels to measure"
             )
-        issues = get_discussions(github_connection, search_query)
+        issues = get_discussions(github_connection, search_query, max_comments_eval)
         if len(issues) <= 0:
             print("No discussions found")
             write_to_markdown(

@@ -133,3 +133,126 @@ class TestGetDiscussions(unittest.TestCase):
 
         with self.assertRaises(GithubException):
             get_discussions(github_connection, "repo:user/repo type:discussions query")
+
+    def test_get_discussions_paginates_comments(self):
+        """Comments beyond the first page are fetched when max_comments allows."""
+
+        def comment(index):
+            return {
+                "createdAt": "2021-01-01T00:00:00Z",
+                "author": {"login": f"user{index}", "__typename": "User"},
+            }
+
+        first_page = [comment(index) for index in range(100)]
+        second_page = [comment(index) for index in range(100, 150)]
+
+        discussion = {
+            "id": "D_kwDO",
+            "title": "Discussion 1",
+            "url": "https://github.com/user/repo/discussions/1",
+            "createdAt": "2021-01-01T00:00:00Z",
+            "author": {"login": "author", "__typename": "User"},
+            "comments": {
+                "nodes": first_page,
+                "pageInfo": {"hasNextPage": True, "endCursor": "comment100"},
+            },
+            "answerChosenAt": None,
+            "closedAt": None,
+        }
+
+        github_connection = MagicMock()
+        github_connection.requester.graphql_query.side_effect = [
+            ({}, self._create_mock_response([discussion], has_next_page=False)),
+            (
+                {},
+                {
+                    "data": {
+                        "node": {
+                            "comments": {
+                                "nodes": second_page,
+                                "pageInfo": {
+                                    "hasNextPage": False,
+                                    "endCursor": "comment150",
+                                },
+                            }
+                        }
+                    }
+                },
+            ),
+        ]
+
+        discussions = get_discussions(
+            github_connection, "repo:user/repo type:discussions query", max_comments=150
+        )
+
+        # All 150 comments are collected, not just the first page of 100
+        self.assertEqual(len(discussions[0]["comments"]["nodes"]), 150)
+
+        # A follow-up query was made for the remaining comments
+        self.assertEqual(github_connection.requester.graphql_query.call_count, 2)
+        comment_call_variables = (
+            github_connection.requester.graphql_query.call_args_list[1].args[1]
+        )
+        self.assertEqual(comment_call_variables["id"], "D_kwDO")
+        self.assertEqual(comment_call_variables["cursor"], "comment100")
+        self.assertEqual(comment_call_variables["pageSize"], 50)
+
+    def test_get_discussions_stops_paginating_comments_at_max_comments(self):
+        """No extra request is made once max_comments comments are collected."""
+        discussion = {
+            "id": "D_kwDO",
+            "title": "Discussion 1",
+            "url": "https://github.com/user/repo/discussions/1",
+            "createdAt": "2021-01-01T00:00:00Z",
+            "author": {"login": "author", "__typename": "User"},
+            "comments": {
+                "nodes": [
+                    {
+                        "createdAt": "2021-01-01T00:00:00Z",
+                        "author": {"login": "user1", "__typename": "User"},
+                    }
+                ],
+                "pageInfo": {"hasNextPage": True, "endCursor": "comment1"},
+            },
+            "answerChosenAt": None,
+            "closedAt": None,
+        }
+
+        github_connection = MagicMock()
+        github_connection.requester.graphql_query.return_value = (
+            {},
+            self._create_mock_response([discussion], has_next_page=False),
+        )
+
+        discussions = get_discussions(
+            github_connection, "repo:user/repo type:discussions query", max_comments=1
+        )
+
+        self.assertEqual(len(discussions[0]["comments"]["nodes"]), 1)
+        self.assertEqual(github_connection.requester.graphql_query.call_count, 1)
+
+    def test_get_discussions_with_no_comments(self):
+        """A discussion without a comments connection triggers no extra request."""
+        discussion = {
+            "id": "D_kwDO",
+            "title": "Discussion 1",
+            "url": "https://github.com/user/repo/discussions/1",
+            "createdAt": "2021-01-01T00:00:00Z",
+            "author": {"login": "author", "__typename": "User"},
+            "comments": None,
+            "answerChosenAt": None,
+            "closedAt": None,
+        }
+
+        github_connection = MagicMock()
+        github_connection.requester.graphql_query.return_value = (
+            {},
+            self._create_mock_response([discussion], has_next_page=False),
+        )
+
+        discussions = get_discussions(
+            github_connection, "repo:user/repo type:discussions query", max_comments=150
+        )
+
+        self.assertIsNone(discussions[0]["comments"])
+        self.assertEqual(github_connection.requester.graphql_query.call_count, 1)
