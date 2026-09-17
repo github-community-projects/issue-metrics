@@ -14,7 +14,7 @@ dependencies = [
 dev = [
     "black==26.5.1",
     "flake8==7.3.0",
-    "isort==8.0.1",
+    "isort==9.0.1",
     "mypy==2.3.1",
     "mypy-extensions==1.1.0",
     "pylint==4.0.8",
