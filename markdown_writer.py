@@ -44,13 +44,12 @@ Functions:
 """
 
 from datetime import timedelta
-from typing import Dict, List, Union
 
 from classes import IssueWithMetrics
 from config import get_env_vars
 
 
-def get_non_hidden_columns(labels) -> List[str]:
+def get_non_hidden_columns(labels) -> list[str]:
     """
     Get a list of the columns that are not hidden.
 
@@ -114,8 +113,8 @@ def get_non_hidden_columns(labels) -> List[str]:
 
 
 def sort_issues(
-    issues: List[IssueWithMetrics], sort_by: str | None, sort_order: str
-) -> List[IssueWithMetrics]:
+    issues: list[IssueWithMetrics], sort_by: str | None, sort_order: str
+) -> list[IssueWithMetrics]:
     """Sort issues by the specified field.
 
     Args:
@@ -145,8 +144,8 @@ def sort_issues(
     reverse = sort_order == "desc"
 
     # Sort with None values at the end, regardless of sort order
-    non_none_issues: List[IssueWithMetrics] = []
-    none_issues: List[IssueWithMetrics] = []
+    non_none_issues: list[IssueWithMetrics] = []
+    none_issues: list[IssueWithMetrics] = []
 
     for issue in issues:
         value = getattr(issue, sort_by, None)
@@ -165,8 +164,8 @@ def sort_issues(
 
 
 def group_issues(
-    issues: List[IssueWithMetrics], group_by: str | None
-) -> Dict[str, List[IssueWithMetrics]]:
+    issues: list[IssueWithMetrics], group_by: str | None
+) -> dict[str, list[IssueWithMetrics]]:
     """Group issues by the specified field.
 
     Args:
@@ -185,7 +184,7 @@ def group_issues(
     if group_by not in valid_fields:
         return {"": issues}
 
-    grouped: Dict[str, List[IssueWithMetrics]] = {}
+    grouped: dict[str, list[IssueWithMetrics]] = {}
     for issue in issues:
         if group_by == "author":
             key = issue.author or "Unknown"
@@ -205,17 +204,17 @@ def group_issues(
 
 
 def write_to_markdown(
-    issues_with_metrics: Union[List[IssueWithMetrics], None],
-    average_time_to_first_response: Union[dict[str, timedelta], None],
-    average_time_to_first_review: Union[dict[str, timedelta], None],
-    average_time_to_close: Union[dict[str, timedelta], None],
-    average_time_to_answer: Union[dict[str, timedelta], None],
-    average_time_in_draft: Union[dict[str, timedelta], None],
-    average_time_in_labels: Union[dict, None],
-    stats_pr_comments: Union[dict[str, float], None],
-    num_issues_opened: Union[int, None],
-    num_issues_closed: Union[int, None],
-    num_mentor_count: Union[int, None],
+    issues_with_metrics: list[IssueWithMetrics] | None,
+    average_time_to_first_response: dict[str, timedelta] | None,
+    average_time_to_first_review: dict[str, timedelta] | None,
+    average_time_to_close: dict[str, timedelta] | None,
+    average_time_to_answer: dict[str, timedelta] | None,
+    average_time_in_draft: dict[str, timedelta] | None,
+    average_time_in_labels: dict | None,
+    stats_pr_comments: dict[str, float] | None,
+    num_issues_opened: int | None,
+    num_issues_closed: int | None,
+    num_mentor_count: int | None,
     labels=None,
     search_query=None,
     hide_label_metrics=False,
@@ -311,14 +310,12 @@ def write_to_markdown(
 
                 # First write the header
                 file.write("|")
-                for column in columns:
-                    file.write(f" {column} |")
+                file.writelines(f" {column} |" for column in columns)
                 file.write("\n")
 
                 # Then write the column dividers
                 file.write("|")
-                for _ in columns:
-                    file.write(" --- |")
+                file.writelines(" --- |" for _ in columns)
                 file.write("\n")
 
                 # Then write the issues/pr/discussions row by row

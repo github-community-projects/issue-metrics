@@ -16,19 +16,18 @@ Functions:
         Calculate stats describing the comment count for a list of pull requests.
 """
 
-from typing import List, Union
-
 import numpy
-from classes import IssueWithMetrics
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 
+from classes import IssueWithMetrics
+
 
 def count_pr_comments(
-    issue: Union[Issue, None],
-    pull_request: Union[PullRequest, None] = None,
-    ignore_users: Union[List[str], None] = None,
-) -> Union[int, None]:
+    issue: Issue | None,
+    pull_request: PullRequest | None = None,
+    ignore_users: list[str] | None = None,
+) -> int | None:
     """Count the number of comments on a pull request, excluding bot comments.
 
     Args:
@@ -80,8 +79,8 @@ def count_pr_comments(
 
 
 def get_stats_pr_comments(
-    issues_with_metrics: List[IssueWithMetrics],
-) -> Union[dict[str, float], None]:
+    issues_with_metrics: list[IssueWithMetrics],
+) -> dict[str, float] | None:
     """Calculate stats describing the comment count for a list of pull requests.
 
     Args:

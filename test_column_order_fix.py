@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 """
 Test to verify that the Status and Created At columns have their content aligned with headers.
 

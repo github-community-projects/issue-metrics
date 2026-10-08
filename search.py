@@ -1,7 +1,6 @@
 """A module to search for issues in a GitHub repository."""
 
 import sys
-from typing import List
 
 from github import Github, GithubException, RateLimitExceededException
 
@@ -9,7 +8,7 @@ from github import Github, GithubException, RateLimitExceededException
 def search_issues(
     search_query: str,
     github_connection: Github,
-    owners_and_repositories: List[dict],
+    owners_and_repositories: list[dict],
 ) -> list:
     """
     Searches for issues/prs/discussions in a GitHub repository that match
@@ -94,7 +93,7 @@ def print_error_messages(error: GithubException):
 
 def get_owners_and_repositories(
     search_query: str,
-) -> List[dict]:
+) -> list[dict]:
     """Get the owners and repositories from the search query.
 
     Args:

@@ -16,15 +16,15 @@ Functions:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Union
 
 import numpy
+
 from classes import IssueWithMetrics
 
 
 def get_stats_time_to_answer(
-    issues_with_metrics: List[IssueWithMetrics],
-) -> Union[dict[str, timedelta], None]:
+    issues_with_metrics: list[IssueWithMetrics],
+) -> dict[str, timedelta] | None:
     """
     Calculate stats describing the time to answer for a list of issues.
     """
@@ -62,7 +62,7 @@ def get_stats_time_to_answer(
     return stats
 
 
-def measure_time_to_answer(discussion: dict) -> Union[timedelta, None]:
+def measure_time_to_answer(discussion: dict) -> timedelta | None:
     """Measure the time to answer for a discussion.
 
     Args:

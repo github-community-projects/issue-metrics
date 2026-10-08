@@ -12,7 +12,6 @@ Functions:
 
 import os
 from os.path import dirname, join
-from typing import List
 
 from dotenv import load_dotenv
 
@@ -82,8 +81,8 @@ class EnvVars:
         hide_time_to_first_review: bool,
         hide_created_at: bool,
         hide_status: bool,
-        ignore_user: List[str],
-        labels_to_measure: List[str],
+        ignore_user: list[str],
+        labels_to_measure: list[str],
         enable_mentor_count: bool,
         min_mentor_comments: str,
         max_comments_eval: str,
@@ -239,12 +238,12 @@ def get_env_vars(test: bool = False) -> EnvVars:
 
     ghe = os.getenv("GH_ENTERPRISE_URL", default="").strip()
 
-    labels_to_measure_list: List[str] = []
+    labels_to_measure_list: list[str] = []
     labels_to_measure: str | None = os.getenv("LABELS_TO_MEASURE")
     if labels_to_measure:
         labels_to_measure_list = labels_to_measure.split(",")
 
-    ignore_users_list: List[str] = []
+    ignore_users_list: list[str] = []
     ignore_users: str | None = os.getenv("IGNORE_USERS")
     if ignore_users:
         ignore_users_list = ignore_users.split(",")

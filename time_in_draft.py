@@ -3,19 +3,19 @@ This module contains a function that measures the time a pull request has been i
 """
 
 from datetime import datetime, timedelta
-from typing import List, Union
 
 import numpy
 import pytz
-from classes import IssueWithMetrics
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+
+from classes import IssueWithMetrics
 
 
 def measure_time_in_draft(
     issue: Issue,
-    pull_request: Union[PullRequest, None] = None,
-) -> Union[timedelta, None]:
+    pull_request: PullRequest | None = None,
+) -> timedelta | None:
     """If a pull request has had time in the draft state, return the cumulative amount of time it was in draft.
 
     args:
@@ -96,8 +96,8 @@ def measure_time_in_draft(
 
 
 def get_stats_time_in_draft(
-    issues_with_metrics: List[IssueWithMetrics],
-) -> Union[dict[str, timedelta], None]:
+    issues_with_metrics: list[IssueWithMetrics],
+) -> dict[str, timedelta] | None:
     """
     Calculate stats describing the time in draft for a list of issues.
     """

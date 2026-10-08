@@ -1,21 +1,21 @@
 """Utilities for measuring time to first review for pull requests."""
 
 from datetime import datetime, timedelta
-from typing import List, Union
 
 import numpy
-from classes import IssueWithMetrics
 from github.Issue import Issue
 from github.PullRequest import PullRequest
+
+from classes import IssueWithMetrics
 from time_to_first_response import ignore_comment
 
 
 def measure_time_to_first_review(
-    issue: Union[Issue, None],
-    pull_request: Union[PullRequest, None],
-    ready_for_review_at: Union[datetime, None] = None,
-    ignore_users: Union[List[str], None] = None,
-) -> Union[timedelta, None]:
+    issue: Issue | None,
+    pull_request: PullRequest | None,
+    ready_for_review_at: datetime | None = None,
+    ignore_users: list[str] | None = None,
+) -> timedelta | None:
     """Measures duration between pull request creation time and the timestamp when the first review is submitted"""
 
     if not issue or not pull_request:
@@ -59,8 +59,8 @@ def measure_time_to_first_review(
 
 
 def get_stats_time_to_first_review(
-    issues: List[IssueWithMetrics],
-) -> Union[dict[str, timedelta], None]:
+    issues: list[IssueWithMetrics],
+) -> dict[str, timedelta] | None:
     """Compute statistics (average, median, 90th percentile) for time to first review."""
     review_times = []
     none_count = 0

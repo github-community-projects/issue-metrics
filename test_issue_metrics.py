@@ -839,12 +839,14 @@ class TestIssueMetricsMainGuard(unittest.TestCase):
             # without doing any real GitHub work. We only need the
             # `if __name__ == "__main__": main()` line itself to execute
             # for coverage to register the guard.
-            with patch(
-                "config.get_env_vars",
-                side_effect=SystemExit(0),
+            with (
+                patch(
+                    "config.get_env_vars",
+                    side_effect=SystemExit(0),
+                ),
+                self.assertRaises(SystemExit),
             ):
-                with self.assertRaises(SystemExit):
-                    runpy.run_module("issue_metrics", run_name="__main__")
+                runpy.run_module("issue_metrics", run_name="__main__")
         finally:
             # Restore the originally imported module so other tests see the
             # same identity for any patches they have applied.

@@ -11,8 +11,9 @@ Classes:
 import unittest
 from unittest.mock import MagicMock, patch
 
-from auth import auth_to_github, get_github_app_installation_token
 from github import Github
+
+from auth import auth_to_github, get_github_app_installation_token
 
 
 class TestAuthToGithub(unittest.TestCase):

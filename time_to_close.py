@@ -17,16 +17,16 @@ Functions:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Union
 
 import numpy
-from classes import IssueWithMetrics
 from github.Issue import Issue
+
+from classes import IssueWithMetrics
 
 
 def measure_time_to_close(
-    issue: Union[Issue, None], discussion: Union[dict, None]
-) -> Union[timedelta, None]:
+    issue: Issue | None, discussion: dict | None
+) -> timedelta | None:
     """Measure the time it takes to close an issue or discussion.
 
     Args:
@@ -56,8 +56,8 @@ def measure_time_to_close(
 
 
 def get_stats_time_to_close(
-    issues_with_metrics: List[IssueWithMetrics],
-) -> Union[dict[str, timedelta], None]:
+    issues_with_metrics: list[IssueWithMetrics],
+) -> dict[str, timedelta] | None:
     """Calculate stats describing the time to close for a list of issues.
 
     Args:

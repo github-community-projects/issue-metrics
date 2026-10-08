@@ -8,8 +8,9 @@ Classes:
 import unittest
 from unittest.mock import MagicMock
 
-from discussions import get_discussions
 from github import GithubException
+
+from discussions import get_discussions
 
 
 class TestGetDiscussions(unittest.TestCase):

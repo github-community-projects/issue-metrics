@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytz
+
 from classes import IssueWithMetrics
 from labels import get_label_events, get_label_metrics, get_stats_time_in_labels
 

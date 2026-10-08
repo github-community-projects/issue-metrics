@@ -13,14 +13,13 @@ Functions:
 """
 
 from datetime import datetime, timedelta
-from typing import Union
 
 from github.PullRequest import PullRequest
 
 
 def measure_time_to_merge(
-    pull_request: PullRequest, ready_for_review_at: Union[datetime, None]
-) -> Union[timedelta, None]:
+    pull_request: PullRequest, ready_for_review_at: datetime | None
+) -> timedelta | None:
     """Measure the time it takes to merge a pull request.
 
     Args:

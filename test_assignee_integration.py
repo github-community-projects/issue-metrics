@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
 from classes import IssueWithMetrics
@@ -34,7 +34,7 @@ class TestAssigneeIntegration(unittest.TestCase):
                 assignees=["alice"],
                 time_to_first_response=timedelta(hours=2),
                 time_to_close=timedelta(days=1),
-                created_at=datetime.now() - timedelta(days=2),
+                created_at=datetime.now(timezone.utc) - timedelta(days=2),
             ),
             IssueWithMetrics(
                 title="Test Issue 2",
@@ -44,7 +44,7 @@ class TestAssigneeIntegration(unittest.TestCase):
                 assignees=[],
                 time_to_first_response=timedelta(hours=4),
                 time_to_close=None,
-                created_at=datetime.now() - timedelta(days=1),
+                created_at=datetime.now(timezone.utc) - timedelta(days=1),
             ),
         ]
 
@@ -113,7 +113,7 @@ class TestAssigneeIntegration(unittest.TestCase):
                 assignees=["alice", "bob"],
                 time_to_first_response=timedelta(hours=2),
                 time_to_close=timedelta(days=1),
-                created_at=datetime.now() - timedelta(days=2),
+                created_at=datetime.now(timezone.utc) - timedelta(days=2),
             ),
             IssueWithMetrics(
                 title="Test Issue 2",
@@ -123,7 +123,7 @@ class TestAssigneeIntegration(unittest.TestCase):
                 assignees=[],
                 time_to_first_response=timedelta(hours=4),
                 time_to_close=None,
-                created_at=datetime.now() - timedelta(days=1),
+                created_at=datetime.now(timezone.utc) - timedelta(days=1),
             ),
         ]
 
