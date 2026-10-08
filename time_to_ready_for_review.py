@@ -15,7 +15,6 @@ Functions:
 """
 
 from datetime import datetime
-from typing import Union
 
 from github.Issue import Issue
 from github.PullRequest import PullRequest
@@ -24,7 +23,7 @@ from github.PullRequest import PullRequest
 def get_time_to_ready_for_review(
     issue: Issue,
     pull_request: PullRequest,
-) -> Union[datetime, None]:
+) -> datetime | None:
     """If a pull request was formerly a draft, get the time it was marked as ready
     for review
 

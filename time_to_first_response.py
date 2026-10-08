@@ -19,21 +19,21 @@ Functions:
 """
 
 from datetime import datetime, timedelta
-from typing import List, Union
 
 import numpy
-from classes import IssueWithMetrics
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 
+from classes import IssueWithMetrics
+
 
 def measure_time_to_first_response(
-    issue: Union[Issue, None],
-    discussion: Union[dict, None],
-    pull_request: Union[PullRequest, None] = None,
-    ready_for_review_at: Union[datetime, None] = None,
-    ignore_users: Union[List[str], None] = None,
-) -> Union[timedelta, None]:
+    issue: Issue | None,
+    discussion: dict | None,
+    pull_request: PullRequest | None = None,
+    ready_for_review_at: datetime | None = None,
+    ignore_users: list[str] | None = None,
+) -> timedelta | None:
     """Measure the time to first response for a single issue, pull request, or a discussion.
 
     Args:
@@ -123,9 +123,9 @@ def measure_time_to_first_response(
 def ignore_comment(
     issue_user,
     comment_user,
-    ignore_users: List[str],
+    ignore_users: list[str],
     comment_created_at: datetime,
-    ready_for_review_at: Union[datetime, None],
+    ready_for_review_at: datetime | None,
 ) -> bool:
     """Check if a comment should be ignored."""
 
@@ -153,8 +153,8 @@ def ignore_comment(
 
 
 def get_stats_time_to_first_response(
-    issues: List[IssueWithMetrics],
-) -> Union[dict[str, timedelta], None]:
+    issues: list[IssueWithMetrics],
+) -> dict[str, timedelta] | None:
     """Calculate the stats describing time to first response for a list of issues.
 
     Args:

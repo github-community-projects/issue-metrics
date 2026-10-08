@@ -1,15 +1,15 @@
 """Functions for calculating time spent in labels."""
 
 from datetime import datetime, timedelta
-from typing import List
 
 import numpy
 import pytz
-from classes import IssueWithMetrics
 from github.Issue import Issue
 
+from classes import IssueWithMetrics
 
-def get_label_events(issue: Issue, labels: List[str]) -> list:
+
+def get_label_events(issue: Issue, labels: list[str]) -> list:
     """
     Get the label events for a given issue if the label is of interest.
 
@@ -28,7 +28,7 @@ def get_label_events(issue: Issue, labels: List[str]) -> list:
     return label_events
 
 
-def get_label_metrics(issue: Issue, labels: List[str]) -> dict:
+def get_label_metrics(issue: Issue, labels: list[str]) -> dict:
     """
     Calculate the time spent with the given labels on a given issue.
 
@@ -93,7 +93,7 @@ def get_label_metrics(issue: Issue, labels: List[str]) -> dict:
 
 
 def get_stats_time_in_labels(
-    issues_with_metrics: List[IssueWithMetrics],
+    issues_with_metrics: list[IssueWithMetrics],
     labels: dict[str, timedelta],
 ) -> dict[str, dict[str, timedelta | None]]:
     """Calculate stats describing time spent in each label."""

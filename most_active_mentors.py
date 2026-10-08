@@ -36,19 +36,19 @@ Functions:
 
 from collections import Counter
 from datetime import datetime
-from typing import Dict, List, Union
 
-from classes import IssueWithMetrics
 from github.Issue import Issue
 from github.PullRequest import PullRequest
 
+from classes import IssueWithMetrics
+
 
 def count_comments_per_user(
-    issue: Union[Issue, None],
-    discussion: Union[dict, None] = None,
-    pull_request: Union[PullRequest, None] = None,
-    ready_for_review_at: Union[datetime, None] = None,
-    ignore_users: List[str] | None = None,
+    issue: Issue | None,
+    discussion: dict | None = None,
+    pull_request: PullRequest | None = None,
+    ready_for_review_at: datetime | None = None,
+    ignore_users: list[str] | None = None,
     max_comments_to_eval=20,
     heavily_involved=3,
 ) -> dict:
@@ -74,7 +74,7 @@ def count_comments_per_user(
     """
     if ignore_users is None:
         ignore_users = []
-    mentor_count: Dict[str, int] = {}
+    mentor_count: dict[str, int] = {}
 
     # Get the first comments
     if issue:
@@ -165,9 +165,9 @@ def count_comments_per_user(
 def ignore_comment(
     issue_user,
     comment_user,
-    ignore_users: List[str],
+    ignore_users: list[str],
     comment_created_at: datetime,
-    ready_for_review_at: Union[datetime, None],
+    ready_for_review_at: datetime | None,
 ) -> bool:
     """Check if a comment should be ignored."""
     # PyGithub returns None for ghost (deleted) users
@@ -187,7 +187,7 @@ def ignore_comment(
     )
 
 
-def get_mentor_count(issues_with_metrics: List[IssueWithMetrics], cutoff: int) -> int:
+def get_mentor_count(issues_with_metrics: list[IssueWithMetrics], cutoff: int) -> int:
     """Calculate the number of active mentors on the project.
 
     Args:

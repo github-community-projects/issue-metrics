@@ -17,13 +17,13 @@ Functions:
 
 import shutil
 from pathlib import Path
-from typing import List, Union
+
+from github.Issue import Issue
 
 from auth import auth_to_github, get_github_app_installation_token
 from classes import IssueWithMetrics
 from config import EnvVars, get_env_vars
 from discussions import get_discussions
-from github.Issue import Issue
 from json_writer import write_to_json
 from labels import get_label_metrics, get_stats_time_in_labels
 from markdown_helpers import markdown_too_large_for_issue_body, split_markdown_file
@@ -47,14 +47,14 @@ from time_to_ready_for_review import get_time_to_ready_for_review
 
 
 def get_per_issue_metrics(
-    issues: Union[List[dict], List[Issue]],
+    issues: list[dict] | list[Issue],
     env_vars: EnvVars,
     discussions: bool = False,
-    labels: Union[List[str], None] = None,
-    ignore_users: Union[List[str], None] = None,
+    labels: list[str] | None = None,
+    ignore_users: list[str] | None = None,
     max_comments_to_eval: int = 20,
     heavily_involved: int = 3,
-) -> tuple[List, int, int]:
+) -> tuple[list, int, int]:
     """
     Calculate the metrics for each issue/pr/discussion in a list provided.
 

@@ -22,23 +22,23 @@ Functions:
 import json
 import os
 from datetime import timedelta
-from typing import Any, Dict, List, Union
+from typing import Any
 
 from classes import IssueWithMetrics
 
 
 def write_to_json(
-    issues_with_metrics: Union[List[IssueWithMetrics], None],
-    stats_time_to_first_response: Union[dict[str, timedelta], None],
-    stats_time_to_first_review: Union[dict[str, timedelta], None],
-    stats_time_to_close: Union[dict[str, timedelta], None],
-    stats_time_to_answer: Union[dict[str, timedelta], None],
-    stats_time_in_draft: Union[dict[str, timedelta], None],
-    stats_time_in_labels: Union[dict[str, dict[str, timedelta]], None],
-    stats_pr_comments: Union[Dict[str, float], None],
-    num_issues_opened: Union[int, None],
-    num_issues_closed: Union[int, None],
-    num_mentor_count: Union[int, None],
+    issues_with_metrics: list[IssueWithMetrics] | None,
+    stats_time_to_first_response: dict[str, timedelta] | None,
+    stats_time_to_first_review: dict[str, timedelta] | None,
+    stats_time_to_close: dict[str, timedelta] | None,
+    stats_time_to_answer: dict[str, timedelta] | None,
+    stats_time_in_draft: dict[str, timedelta] | None,
+    stats_time_in_labels: dict[str, dict[str, timedelta]] | None,
+    stats_pr_comments: dict[str, float] | None,
+    num_issues_opened: int | None,
+    num_issues_closed: int | None,
+    num_mentor_count: int | None,
     search_query: str,
     output_file: str,
 ) -> str:

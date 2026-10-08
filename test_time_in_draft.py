@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
 import pytz
+
 from time_in_draft import get_stats_time_in_draft, measure_time_in_draft
 
 

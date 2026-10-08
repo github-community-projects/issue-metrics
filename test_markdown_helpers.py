@@ -59,7 +59,7 @@ class TestMarkdownHelpers(unittest.TestCase):
         self.assertTrue(os.path.exists("temp_3.md"))
 
         # Assert that the all files have less than max characters
-        for i in range(0, multiple_of_max):
+        for i in range(multiple_of_max):
             with open(f"temp_{i}.md", "r", encoding="utf-8") as f:
                 self.assertLessEqual(len(f.read()), max_char_count)
 

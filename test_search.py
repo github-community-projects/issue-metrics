@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import MagicMock
 
 from github import GithubException, RateLimitExceededException
+
 from search import get_owners_and_repositories, print_error_messages, search_issues
 
 
