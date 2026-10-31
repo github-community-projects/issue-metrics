@@ -1,7 +1,6 @@
 #checkov:skip=CKV_DOCKER_2
 #checkov:skip=CKV_DOCKER_3
-#trivy:ignore:AVD-DS-0002
-FROM python:3.14.7-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d
+FROM python:3.15.0-slim@sha256:f5b92f2a669a4c347044f29367f31983280b648250ca94dea66f98c53bc87e58
 LABEL com.github.actions.name="issue-metrics" \
     com.github.actions.description="Gather metrics on issues/prs/discussions such as time to first response, count of issues opened, closed, etc." \
     com.github.actions.icon="check-square" \
@@ -18,9 +17,14 @@ COPY --from=ghcr.io/astral-sh/uv:0.10.9@sha256:10902f58a1606787602f303954cea0996
 WORKDIR /action/workspace
 COPY pyproject.toml uv.lock *.py /action/workspace/
 
-RUN uv sync --frozen --no-dev --no-editable \
-    && apt-get -y update \
-    && apt-get -y install --no-install-recommends git=1:2.47.3-0+deb13u1 \
+RUN apt-get -y update \
+    && apt-get -y install --no-install-recommends \
+        build-essential=12.12 \
+        git=1:2.47.3-0+deb13u1 \
+        libffi-dev=3.4.8-2 \
+        libffi8=3.4.8-2 \
+    && uv sync --frozen --no-dev --no-editable \
+    && apt-get -y purge --auto-remove build-essential libffi-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Add a simple healthcheck to satisfy container scanners

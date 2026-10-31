@@ -1,3 +1,5 @@
+---
+ignorefile: .github/linters/.trivyignore.yaml
 scan:
   skip-dirs:
     - .mypy_cache

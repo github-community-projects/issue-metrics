@@ -1,0 +1,8 @@
+---
+misconfigurations:
+  - id: DS-0002
+    paths:
+      - Dockerfile
+    statement: >-
+      Root execution is intentional to match the other Docker-based Actions
+      in github-community-projects.
